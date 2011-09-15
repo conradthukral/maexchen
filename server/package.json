@@ -1,0 +1,17 @@
+{
+	"name": "maexchen-server",
+	"version": "0.1.0",
+	"directories": {
+		"bin": "bin",
+		"lib": "lib"
+	},
+	"main": "lib/index.coffee",
+	"files": ["bin", "lib", "package.json"],
+	"dependencies": {
+		"coffee-script": "1.1.x"
+	},
+	"devDependencies": {
+		"jasmine-node": "1.0.x"
+	}
+}
+
