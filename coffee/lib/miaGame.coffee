@@ -1,12 +1,16 @@
+# TODO Write abstraction for rnd that can be mocked
+
 class PlayerList
+	permuteArray = (array) -> array
+
 	constructor: -> @players = []
 
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
 	each: (fn) -> fn player for player in @players
+	permute: -> @players = permuteArray(@players)
 
 class MiaGame
-
 	constructor: ->
 		@players = new PlayerList
 		@currentRound = new PlayerList
@@ -17,7 +21,14 @@ class MiaGame
 		@currentRound = new PlayerList
 		@players.each (player) => # "=>" binds this to MiaGame
 			@currentRound.add player if player.willJoinRound()
+		@permuteCurrentRound()
+
+	permuteCurrentRound: -> @currentRound.permute()
 
 
 exports.createGame = -> new MiaGame
+
+exports.classes =
+	MiaGame: MiaGame
+	PlayerList: PlayerList
 
