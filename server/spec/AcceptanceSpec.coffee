@@ -3,17 +3,19 @@ miaServer = require '../lib/miaServer'
 
 serverPort = 9000
 server = null
+client = null
 
 describe 'the Mia server', ->
 
 	beforeEach ->
 		server = miaServer.start serverPort
+		client = new FakeClient serverPort
 
 	afterEach ->
 		server.shutDown()
+		client.shutDown()
 
 	it 'should accept registrations', ->
-		client = new FakeClient serverPort
 		client.sendPlayerRegistration()
 
 		client.receivesRegistrationConfirmation()
@@ -45,3 +47,5 @@ class FakeClient
 		buffer = new Buffer(string)
 		@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
 
+	shutDown: () ->
+		@socket.close()
