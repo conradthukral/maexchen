@@ -20,6 +20,7 @@ class Server
 		@socket.send buffer, 0, buffer.length, port, host
 
 	shutDown: ->
+		@socket.close()
 
 exports.start = (port) ->
 	return new Server port
