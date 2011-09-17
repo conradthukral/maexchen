@@ -35,8 +35,8 @@ class FakeClient
 
 	receives: (expectedMessage) ->
 		self = this
-		condition = -> self.hasReceived expectedMessage
-		waitsFor condition, "message #{expectedMessage}", 250
+		messageReceived = -> self.hasReceived expectedMessage
+		waitsFor messageReceived, "message #{expectedMessage}", 250
 
 	hasReceived: (expectedMessage) ->
 		@messages.indexOf(expectedMessage) >= 0
