@@ -1,7 +1,7 @@
 class PlayerStub
 	willJoinRound: ->
 
-mia = require('miaGame')
+mia = require '../lib/miaGame'
 
 describe 'Mia Game', ->
 	miaGame = player1 = player2 = null
