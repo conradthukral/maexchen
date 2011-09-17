@@ -10,12 +10,12 @@ class Dice
 		@die1 == 2 and @die2 = 1
 
 	isHigherThan: (otherDice) ->
-		return this.valueForOrdering() > otherDice.valueForOrdering()
+		return @valueForOrdering() > otherDice.valueForOrdering()
 
 	valueForOrdering: () ->
 		result = 10*@die1 + @die2
-		result += 100 if this.isDouble()
-		result += 200 if this.isMia()
+		result += 100 if @isDouble()
+		result += 200 if @isMia()
 		result
 
 rollOneDie = ->

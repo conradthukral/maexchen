@@ -36,8 +36,7 @@ class FakeClient
 		@receives 'REGISTERED;0'
 
 	receives: (expectedMessage) ->
-		self = this
-		messageReceived = -> self.hasReceived expectedMessage
+		messageReceived = => @hasReceived expectedMessage
 		waitsFor messageReceived, "message #{expectedMessage}", 250
 
 	hasReceived: (expectedMessage) ->
