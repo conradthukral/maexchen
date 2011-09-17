@@ -16,9 +16,9 @@ Protokoll
 
 Anmelden
 --------
-- client->server: REGISTER;name;passwort;port
+- client->server: REGISTER;name;passwort
 - Falls name neu ist oder das vorher gespeicherte Passwort stimmt:
-  - Server kommuniziert mit dem Client ab jetzt, indem er Nachrichten an die Ursprungs-IP der Register-Nachricht auf dem angegebenen client-Port schickt.
+  - Server kommuniziert mit dem Client ab jetzt, indem er Nachrichten an die Ursprungs-IP und Ursprungs-Port der Register-Nachricht schickt.
   - server->client: REGISTERED;punktestand
 - Ansonsten:
   server->client: REJECTED
