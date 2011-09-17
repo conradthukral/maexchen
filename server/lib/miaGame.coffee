@@ -1,14 +1,15 @@
-# TODO Write abstraction for rnd that can be mocked
+# See http://coffeescriptcookbook.com/chapters/arrays/shuffling-array-elements
+Array::shuffle = -> @sort -> 0.5 - Math.random()
 
 class PlayerList
-	permuteArray = (array) -> array
+	permuteArray = (array) -> array.shuffle()
 
 	constructor: -> @players = []
 
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
 	each: (fn) -> fn player for player in @players
-	permute: -> @players = permuteArray(@players)
+	permute: -> @players = permuteArray @players
 
 class MiaGame
 	constructor: ->

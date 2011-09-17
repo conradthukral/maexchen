@@ -71,18 +71,17 @@ describe 'permutation', ->
 
 		list1 = new mia.classes.PlayerList
 		list2 = new mia.classes.PlayerList
-		for value in [1..10]
+		for value in [1..100]
 			list1.add value
 			list2.add value
 
 	it 'should have same number of objects after permutation', ->
 			expect(list1.players).toEqualArray(list2.players)
-			list1.permute
+			list1.permute()
 			expect(list1.players).toHaveEqualLength(list2.players)
 
-	#TODO
-	xit 'should not have same order of objects after permutation', ->
+	it 'should not have same order of objects after permutation', ->
 			expect(list1.players).toEqualArray(list2.players)
-			list1.permute
+			list1.permute()
 			expect(list1.players).not.toEqualArray(list2.players)
 
