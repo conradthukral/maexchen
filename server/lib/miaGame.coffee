@@ -6,6 +6,7 @@ class PlayerList
 
 	constructor: -> @players = []
 
+	size: -> @players.length
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
 	each: (fn) -> for player in @players
@@ -20,23 +21,34 @@ class MiaGame
 	constructor: ->
 		@players = new PlayerList
 		@currentRound = new PlayerList
-		@responseTimeout = 200
+		@broadcastTimeout = 200
+		@timeout = null
 
 	registerPlayer: (player) -> @players.add player
-	setResponseTimeout: (@responseTimeout) ->
+	setBroadcastTimeout: (@broadcastTimeout) ->
+	stop: -> clearTimeout(@timeout)
 
 	newRound: ->
 		@currentRound = round = new PlayerList
 		mayJoin = true
-		setTimeout (-> mayJoin = false), @responseTimeout
+		closeJoiningAndStartRound = =>
+			mayJoin = false
+			if round.size() == 0
+				@newRound()
+			else
+				@startRound()
 
-		@players.each (player) ->
-			player.willJoinRound (join) ->
+		@timeout = setTimeout closeJoiningAndStartRound, @broadcastTimeout
+
+		@players.each (player) => # "=>" binds this to MiaGame
+			player.willJoinRound (join) =>
 				round.add player if join and mayJoin
+				@startRound() if round.size() == @players.size()
+
+	startRound: ->
 		@permuteCurrentRound()
 
 	permuteCurrentRound: -> @currentRound.permute()
-
 
 exports.createGame = -> new MiaGame
 

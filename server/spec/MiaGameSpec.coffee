@@ -29,9 +29,15 @@ describe 'Mia Game', ->
 		expect(miaGame.currentRound.permute).toHaveBeenCalled()
 
 	describe 'new round', ->
+		accept = (question) -> question(true)
+		deny = (question) -> question(false)
+
 		beforeEach ->
 			miaGame.registerPlayer player1 = new PlayerStub
 			miaGame.registerPlayer player2 = new PlayerStub
+
+		afterEach ->
+			miaGame.stop()
 
 		it 'should broadcast new round', ->
 			spyOn player1, 'willJoinRound'
@@ -45,8 +51,8 @@ describe 'Mia Game', ->
 
 		it 'should have player for current round when she wants to', ->
 			runs ->
-				player1.willJoinRound = (joinRound) -> joinRound(true)
-				player2.willJoinRound = (joinRound) -> joinRound(true)
+				player1.willJoinRound = accept
+				player2.willJoinRound = accept
 				miaGame.newRound()
 				expect(miaGame.currentRound).not.toHavePlayer player1
 			waits 0
@@ -57,7 +63,7 @@ describe 'Mia Game', ->
 
 		it 'should not have player for current round when she does not want to', ->
 			runs ->
-				player1.willJoinRound = (joinRound) -> joinRound(false)
+				player1.willJoinRound = deny
 				miaGame.newRound()
 			waits 0
 
@@ -65,7 +71,7 @@ describe 'Mia Game', ->
 				expect(miaGame.currentRound).not.toHavePlayer player1
 
 		it 'should not accept joins for the current round after timeout', ->
-			miaGame.setResponseTimeout 30
+			miaGame.setBroadcastTimeout 30
 			runs ->
 				player1.willJoinRound = (joinRound) ->
 					setTimeout (-> joinRound(true)), 40
@@ -93,11 +99,49 @@ describe 'Mia Game', ->
 				expect(firstRound).toHavePlayer player1
 				expect(secondRound).not.toHavePlayer player1
 
-# TODO block until all players joined or time out is over
+		it 'should start round after all players joined', ->
+			spyOn miaGame, 'startRound'
+			runs ->
+				player1.willJoinRound = accept
+				player2.willJoinRound = accept
+				miaGame.newRound()
+			waits 0
+			runs ->
+				expect(miaGame.startRound).toHaveBeenCalled()
 
-		it 'should permute the current round when setting up a new round', ->
+		it 'should start round after timeout when players are missing', ->
+			spyOn miaGame, 'startRound'
+			miaGame.setBroadcastTimeout 20
+			runs ->
+				player1.willJoinRound = accept
+				miaGame.newRound()
+			waits 15
+			runs ->
+				expect(miaGame.startRound).not.toHaveBeenCalled()
+			waits 15
+			runs ->
+				expect(miaGame.startRound).toHaveBeenCalled()
+			
+
+		it 'should not start round, but call newRound(), if nobody joined', ->
+			spyOn miaGame, 'startRound'
+			spyOn(miaGame, 'newRound').andCallThrough()
+			miaGame.setBroadcastTimeout 20
+			runs ->
+				miaGame.newRound()
+			waits 15
+			runs ->
+				expect(miaGame.newRound).toHaveBeenCalled()
+				expect(miaGame.newRound.callCount).toBe 1
+				expect(miaGame.startRound).not.toHaveBeenCalled()
+			waits 15
+			runs ->
+				expect(miaGame.startRound).not.toHaveBeenCalled()
+				expect(miaGame.newRound.callCount).toBe 2
+
+		it 'should permute the current round when starting a new round', ->
 			spyOn miaGame, 'permuteCurrentRound'
-			miaGame.newRound()
+			miaGame.startRound()
 			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
 
 describe 'permutation', ->
