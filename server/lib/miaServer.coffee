@@ -33,6 +33,7 @@ class Server
 
 	shutDown: ->
 		@socket.close()
+		@game.stop()
 
 	setTokenGenerator: ->
 
