@@ -26,13 +26,13 @@ class MiaGame
 	setResponseTimeout: (@responseTimeout) ->
 
 	newRound: ->
-		@currentRound = new PlayerList
+		@currentRound = round = new PlayerList
 		mayJoin = true
 		setTimeout (-> mayJoin = false), @responseTimeout
 
-		@players.each (player) => # "=>" binds this to MiaGame
-			player.willJoinRound (join) =>
-				@currentRound.add player if join and mayJoin
+		@players.each (player) ->
+			player.willJoinRound (join) ->
+				round.add player if join and mayJoin
 		@permuteCurrentRound()
 
 	permuteCurrentRound: -> @currentRound.permute()

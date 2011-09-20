@@ -75,7 +75,25 @@ describe 'Mia Game', ->
 			runs ->
 				expect(miaGame.currentRound).not.toHavePlayer player1
 
-# TODO prevent interference of delayed joins from previous rounds
+		it 'should not have joins for first round in second round', ->
+			firstRound = secondRound = null
+			runs ->
+				player1.willJoinRound = (joinRound) ->
+					setTimeout (-> joinRound(true)), 40
+				miaGame.newRound()
+				firstRound = miaGame.currentRound
+			waits 20
+			runs ->
+				player1.willJoinRound = (joinRound) ->
+				miaGame.newRound()
+				secondRound = miaGame.currentRound
+			waits 30
+			runs ->
+				expect(firstRound).not.toBe secondRound
+				expect(firstRound).toHavePlayer player1
+				expect(secondRound).not.toHavePlayer player1
+
+# TODO block until all players joined or time out is over
 
 		it 'should permute the current round when setting up a new round', ->
 			spyOn miaGame, 'permuteCurrentRound'
