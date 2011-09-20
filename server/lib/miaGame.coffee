@@ -20,14 +20,19 @@ class MiaGame
 	constructor: ->
 		@players = new PlayerList
 		@currentRound = new PlayerList
+		@responseTimeout = 200
 
 	registerPlayer: (player) -> @players.add player
+	setResponseTimeout: (@responseTimeout) ->
 
 	newRound: ->
 		@currentRound = new PlayerList
+		mayJoin = true
+		setTimeout (-> mayJoin = false), @responseTimeout
+
 		@players.each (player) => # "=>" binds this to MiaGame
 			player.willJoinRound (join) =>
-				@currentRound.add player if join
+				@currentRound.add player if join and mayJoin
 		@permuteCurrentRound()
 
 	permuteCurrentRound: -> @currentRound.permute()

@@ -55,7 +55,7 @@ describe 'Mia Game', ->
 				expect(miaGame.currentRound).toHavePlayer player1
 				expect(miaGame.currentRound).toHavePlayer player1
 
-		it 'should not have player for current round when she does not want to',
+		it 'should not have player for current round when she does not want to', ->
 			runs ->
 				player1.willJoinRound = (joinRound) -> joinRound(false)
 				miaGame.newRound()
@@ -64,7 +64,17 @@ describe 'Mia Game', ->
 			runs ->
 				expect(miaGame.currentRound).not.toHavePlayer player1
 
-# TODO don't accept joins after timeout
+		it 'should not accept joins for the current round after timeout', ->
+			miaGame.setResponseTimeout 30
+			runs ->
+				player1.willJoinRound = (joinRound) ->
+					setTimeout (-> joinRound(true)), 40
+				miaGame.newRound()
+			waits 60
+
+			runs ->
+				expect(miaGame.currentRound).not.toHavePlayer player1
+
 # TODO prevent interference of delayed joins from previous rounds
 
 		it 'should permute the current round when setting up a new round', ->
