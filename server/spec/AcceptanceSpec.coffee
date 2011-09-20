@@ -9,17 +9,18 @@ describe 'the Mia server', ->
 
 	beforeEach ->
 		server = miaServer.start serverPort
+		server.setTokenGenerator new FakeTokenGenerator
 		client = new FakeClient serverPort
 
 	afterEach ->
 		server.shutDown()
 		client.shutDown()
 
-	it 'should accept registrations', ->
+	it 'should start a game when the first player connects', ->
 		client.sendPlayerRegistration()
 
 		client.receivesRegistrationConfirmation()
-
+		client.receivesOfferToJoinRoundWithToken 'token1'
 
 class FakeClient
 	constructor: (@serverPort) ->
@@ -35,6 +36,9 @@ class FakeClient
 	receivesRegistrationConfirmation: ->
 		@receives 'REGISTERED;0'
 
+	receivesOfferToJoinRoundWithToken: (token) ->
+		@receives "ROUND STARTING;#{token}"
+
 	receives: (expectedMessage) ->
 		messageReceived = => @hasReceived expectedMessage
 		waitsFor messageReceived, "message #{expectedMessage}", 250
@@ -48,3 +52,11 @@ class FakeClient
 
 	shutDown: () ->
 		@socket.close()
+
+class FakeTokenGenerator
+	constructor: ->
+		@counter = 0
+
+	generate: ->
+		"token#{++@counter}"
+
