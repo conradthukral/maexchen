@@ -16,10 +16,11 @@ describe 'Mia Game', ->
 		player2 = {}
 		expect(miaGame.players).not.toHavePlayer player1
 		miaGame.registerPlayer player1
-		expect(miaGame.players).toHavePlayer player1
 
 		expect(miaGame.players).not.toHavePlayer player2
 		miaGame.registerPlayer player2
+
+		expect(miaGame.players).toHavePlayer player1
 		expect(miaGame.players).toHavePlayer player2
 
 	it 'calls permute on current round', ->
@@ -34,25 +35,42 @@ describe 'Mia Game', ->
 
 		it 'should broadcast new round', ->
 			spyOn player1, 'willJoinRound'
-			miaGame.newRound()
-			expect(player1.willJoinRound).toHaveBeenCalled()
+			spyOn player2, 'willJoinRound'
+			runs ->
+				miaGame.newRound()
+			waits 0
+			runs ->
+				expect(player1.willJoinRound).toHaveBeenCalled()
+				expect(player2.willJoinRound).toHaveBeenCalled()
 
 		it 'should have player for current round when she wants to', ->
-			spyOn(player1, 'willJoinRound').andReturn(true)
-			miaGame.newRound()
-			expect(miaGame.currentRound).toHavePlayer player1
+			runs ->
+				player1.willJoinRound = (joinRound) -> joinRound(true)
+				player2.willJoinRound = (joinRound) -> joinRound(true)
+				miaGame.newRound()
+				expect(miaGame.currentRound).not.toHavePlayer player1
+			waits 0
 
-		it 'should not have player for current round when she does not want to', ->
-			spyOn(player1, 'willJoinRound').andReturn(false)
-			miaGame.newRound()
-			expect(miaGame.currentRound).not.toHavePlayer player1
+			runs ->
+				expect(miaGame.currentRound).toHavePlayer player1
+				expect(miaGame.currentRound).toHavePlayer player1
+
+		it 'should not have player for current round when she does not want to',
+			runs ->
+				player1.willJoinRound = (joinRound) -> joinRound(false)
+				miaGame.newRound()
+			waits 0
+
+			runs ->
+				expect(miaGame.currentRound).not.toHavePlayer player1
+
+# TODO don't accept joins after timeout
+# TODO prevent interference of delayed joins from previous rounds
 
 		it 'should permute the current round when setting up a new round', ->
 			spyOn miaGame, 'permuteCurrentRound'
 			miaGame.newRound()
 			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
-
-# TODO Write abstraction for rnd that can be mocked
 
 describe 'permutation', ->
 	list1 = list2 = {}

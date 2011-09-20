@@ -8,7 +8,12 @@ class PlayerList
 
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
-	each: (fn) -> fn player for player in @players
+	each: (fn) -> for player in @players
+		# "do" makes sure, that player is used with the current value
+		# not the last player from the loop
+		do (player) -> 
+			# call non-blocking
+			setTimeout (-> fn player), 0
 	permute: -> @players = permuteArray @players
 
 class MiaGame
@@ -21,7 +26,8 @@ class MiaGame
 	newRound: ->
 		@currentRound = new PlayerList
 		@players.each (player) => # "=>" binds this to MiaGame
-			@currentRound.add player if player.willJoinRound()
+			player.willJoinRound (join) =>
+				@currentRound.add player if join
 		@permuteCurrentRound()
 
 	permuteCurrentRound: -> @currentRound.permute()
