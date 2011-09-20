@@ -1,8 +1,24 @@
 dgram = require 'dgram'
+miaGame = require './miaGame'
+
+class RemotePlayer
+	constructor: (@socket, @host, @port) ->
+		@sendMessage 'REGISTERED;0'
+
+	willJoinRound: ->
+		console.log 'will join round?'
+		@sendMessage 'ROUND STARTING;token1'
+
+
+	sendMessage: (message) ->
+		console.log "sending #{message} to #{@host}:#{@port}"
+		buffer = new Buffer(message)
+		@socket.send buffer, 0, buffer.length, @port, @host
 
 class Server
 	constructor: (port) ->
 		self = this
+		@game = miaGame.createGame()
 		@socket = dgram.createSocket 'udp4', (message, rinfo) ->
 			fromHost = rinfo.address
 			fromPort = rinfo.port
@@ -12,15 +28,13 @@ class Server
 
 	handleMessage: (message, fromHost, fromPort) ->
 		console.log "received #{message} from #{fromHost}:#{fromPort}"
-		@sendMessage 'REGISTERED;0', fromHost, fromPort
-
-	sendMessage: (message, host, port) ->
-		console.log "sending #{message} to #{host}:#{port}"
-		buffer = new Buffer message
-		@socket.send buffer, 0, buffer.length, port, host
+		@game.registerPlayer new RemotePlayer @socket, fromHost, fromPort
+		@game.newRound() # TODO das ist hier keine Gute Idee
 
 	shutDown: ->
 		@socket.close()
+
+	setTokenGenerator: ->
 
 exports.start = (port) ->
 	return new Server port
