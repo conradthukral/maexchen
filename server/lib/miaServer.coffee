@@ -1,5 +1,14 @@
 dgram = require 'dgram'
 
+class RemotePlayer
+	constructor: (@socket, @host, @port) ->
+		@sendMessage 'REGISTERED;0', @host, @port
+
+	sendMessage: (message) ->
+		console.log "sending #{message} to #{@host}:#{@port}"
+		buffer = new Buffer(message)
+		@socket.send buffer, 0, buffer.length, @port, @host
+
 class Server
 	constructor: (port) ->
 		self = this
@@ -12,15 +21,12 @@ class Server
 
 	handleMessage: (message, fromHost, fromPort) ->
 		console.log "received #{message} from #{fromHost}:#{fromPort}"
-		@sendMessage 'REGISTERED;0', fromHost, fromPort
-
-	sendMessage: (message, host, port) ->
-		console.log "sending #{message} to #{host}:#{port}"
-		buffer = new Buffer message
-		@socket.send buffer, 0, buffer.length, port, host
+		new RemotePlayer @socket, fromHost, fromPort
 
 	shutDown: ->
 		@socket.close()
+
+	setTokenGenerator: ->
 
 exports.start = (port) ->
 	return new Server port
