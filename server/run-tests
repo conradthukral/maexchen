@@ -1,3 +1,9 @@
 #!/bin/sh
-jasmine-node --coffee spec
+localJasmine="node_modules/jasmine-node/bin/jasmine-node"
+jasmineArgs="--coffee spec"
+if [ -x $localJasmine ]; then
+	$localJasmine $jasmineArgs
+else
+	jasmine-node $jasmineArgs
+fi
 
