@@ -77,7 +77,7 @@ module ::Guard
 end
 
 guard 'jasmine-node' do
-  watch /\.coffee/
-  watch /\.js/
+  watch /\.coffee$/
+  watch /\.js$/
 end
 
