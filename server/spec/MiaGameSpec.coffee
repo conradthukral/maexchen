@@ -131,7 +131,7 @@ describe 'Mia Game', ->
 			miaGame.setBroadcastTimeout 20
 			runs ->
 				miaGame.newRound()
-			waits 30
+			waits 40
 			runs ->
 				expect(player1.roundCanceled).toHaveBeenCalledWith 'no players'
 				expect(player2.roundCanceled).toHaveBeenCalledWith 'no players'
@@ -147,7 +147,7 @@ describe 'Mia Game', ->
 				expect(miaGame.newRound).toHaveBeenCalled()
 				expect(miaGame.newRound.callCount).toBe 1
 				expect(miaGame.startRound).not.toHaveBeenCalled()
-			waits 15
+			waits 25
 			runs ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 				expect(miaGame.newRound.callCount).toBe 2
