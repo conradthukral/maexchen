@@ -9,6 +9,9 @@ class PlayerList
 	size: -> @players.length
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
+	first: (fn) ->
+		fn @players[0] if @players[0]?
+
 	each: (fn) -> for player in @players
 		# "do" makes sure, that player is used with the current value
 		# not the last player from the loop
@@ -51,8 +54,24 @@ class MiaGame
 		@permuteCurrentRound()
 		@currentRound.each (player) =>
 			player.roundStarted()
+		@nextTurn()
 
 	permuteCurrentRound: -> @currentRound.permute()
+
+	nextTurn: ->
+		answer = @currentRound.first (player) =>
+			player.yourTurn()
+		switch answer
+			when 'ROLL' then @rollDice()
+			when 'SEE' then @broadcastActualDice()
+			else @currentPlayerLoses()
+
+	rollDice: ->
+
+	broadcastActualDice: ->
+		
+	currentPlayerLoses: ->
+
 
 exports.createGame = -> new MiaGame
 

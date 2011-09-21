@@ -2,6 +2,7 @@ class PlayerStub
 	willJoinRound: ->
 	roundCanceled: ->
 	roundStarted: ->
+	yourTurn: ->
 
 mia = require '../lib/miaGame'
 
@@ -169,6 +170,43 @@ describe 'Mia Game', ->
 			
 			waitsFor (-> player1.roundStarted.callCount > 0), 50
 			waitsFor (-> player2.roundStarted.callCount > 0), 50
+
+		it 'should call next turn', ->
+			spyOn miaGame, 'nextTurn'
+			miaGame.startRound()
+			expect(miaGame.nextTurn).toHaveBeenCalled()
+
+	describe 'next turn', ->
+		beforeEach ->
+			miaGame.registerPlayer player1 = new PlayerStub
+			miaGame.registerPlayer player2 = new PlayerStub
+			miaGame.currentRound.add player1
+			miaGame.currentRound.add player2
+
+		it 'should tell the first player in round that it is her turn', ->
+			spyOn player1, 'yourTurn'
+			spyOn player2, 'yourTurn'
+			miaGame.nextTurn()
+			expect(player1.yourTurn).toHaveBeenCalled()
+			expect(player2.yourTurn).not.toHaveBeenCalled()
+
+		it 'should call rollDice, when player wants to roll', ->
+			spyOn(player1, 'yourTurn').andReturn 'ROLL'
+			spyOn miaGame, 'rollDice'
+			miaGame.nextTurn()
+			expect(miaGame.rollDice).toHaveBeenCalled()
+
+		it 'should call broadcastActualDice, when player wants to see', ->
+			spyOn(player1, 'yourTurn').andReturn 'SEE'
+			spyOn miaGame, 'broadcastActualDice'
+			miaGame.nextTurn()
+			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
+
+		it 'should call currentPlayerLoses, when player fails to answer', ->
+			spyOn(player1, 'yourTurn').andReturn 'GARBAGE'
+			spyOn miaGame, 'currentPlayerLoses'
+			miaGame.nextTurn()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 
 describe 'permutation', ->
 	list1 = list2 = {}
