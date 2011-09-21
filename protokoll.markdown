@@ -23,15 +23,22 @@ Anmelden
 - Ansonsten:
   server->client: REJECTED
   
-Ablauf einer Spielrunde
+Start einer Spielrunde
 -----------------------
 - server->clients: ROUND STARTING;token
 - client->server: JOIN;token
 
+Falls mindestens ein Spieler teilnehmen will:
 - server->clients: ROUND STARTED;spielerinfos*
   wobei spielerinfos mehrfach vorkommen kann und die folgende Form hat:
   name:punktestand
   
+Ansonsten:
+- server->clients: ROUND CANCELED;no players
+  woraufhin eine neue Runde gestartet wird.
+
+Ablauf einer Spielrunde
+-----------------------
 Reihum:
 - server->client: YOUR TURN;token
 - client->server: command;token
