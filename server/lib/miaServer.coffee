@@ -12,24 +12,25 @@ class RemotePlayer
 		@sendMessage "ROUND CANCELED;#{reason}"
 
 	sendMessage: (message) ->
-		console.log "sending #{message} to #{@host}:#{@port}"
+		console.log "sending '#{message}' to #{@host}:#{@port}"
 		buffer = new Buffer(message)
 		@socket.send buffer, 0, buffer.length, @port, @host
 
 class Server
 	constructor: (port, @timeout) ->
-		self = this
-		@game = miaGame.createGame()
-		@game.setBroadcastTimeout @timeout
-		@socket = dgram.createSocket 'udp4', (message, rinfo) ->
+		handleRawMessage = (message, rinfo) =>
 			fromHost = rinfo.address
 			fromPort = rinfo.port
-			self.handleMessage message.toString(), fromHost, fromPort
+			@handleMessage message.toString(), fromHost, fromPort
+
+		@game = miaGame.createGame()
+		@game.setBroadcastTimeout @timeout
+		@socket = dgram.createSocket 'udp4', handleRawMessage
 		@socket.bind port
 		console.log "\nMia server started on port #{port}"
 
 	handleMessage: (message, fromHost, fromPort) ->
-		console.log "received #{message} from #{fromHost}:#{fromPort}"
+		console.log "received '#{message}' from #{fromHost}:#{fromPort}"
 		@game.registerPlayer new RemotePlayer @socket, fromHost, fromPort, @tokenGenerator
 		@game.newRound() # TODO das ist hier keine Gute Idee
 
