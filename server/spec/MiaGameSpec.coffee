@@ -7,11 +7,16 @@ mia = require '../lib/miaGame'
 
 describe 'Mia Game', ->
 	miaGame = player1 = player2 = null
+	accept = (question) -> question(true)
+	deny = (question) -> question(false)
 
 	beforeEach ->
 		miaGame = mia.createGame()
 		this.addMatchers
 			toHavePlayer: (player) -> this.actual.hasPlayer player
+
+	afterEach ->
+		miaGame.stop()
 
 	it 'accepts players to register', ->
 		player1 = {}
@@ -31,15 +36,10 @@ describe 'Mia Game', ->
 		expect(miaGame.currentRound.permute).toHaveBeenCalled()
 
 	describe 'new round', ->
-		accept = (question) -> question(true)
-		deny = (question) -> question(false)
 
 		beforeEach ->
 			miaGame.registerPlayer player1 = new PlayerStub
 			miaGame.registerPlayer player2 = new PlayerStub
-
-		afterEach ->
-			miaGame.stop()
 
 		it 'should broadcast new round', ->
 			spyOn player1, 'willJoinRound'
@@ -151,12 +151,16 @@ describe 'Mia Game', ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 				expect(miaGame.newRound.callCount).toBe 2
 
+	describe 'start round', ->
+
 		it 'should permute the current round when starting a new round', ->
 			spyOn miaGame, 'permuteCurrentRound'
 			miaGame.startRound()
 			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
 
 		it 'should notify players when starting a new round', ->
+			miaGame.registerPlayer player1 = new PlayerStub
+			miaGame.registerPlayer player2 = new PlayerStub
 			spyOn player1, 'roundStarted'
 			spyOn player2, 'roundStarted'
 			player1.willJoinRound = accept
