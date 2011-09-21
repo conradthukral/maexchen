@@ -49,6 +49,8 @@ class MiaGame
 
 	startRound: ->
 		@permuteCurrentRound()
+		@currentRound.each (player) =>
+			player.roundStarted()
 
 	permuteCurrentRound: -> @currentRound.permute()
 

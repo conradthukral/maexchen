@@ -17,7 +17,7 @@ describe 'the Mia server', ->
 		server.shutDown()
 		client.shutDown()
 
-	it 'should keep trying to start a round while nobody wants to play', ->
+	it 'should keep trying to start a round while nobody joins', ->
 		client.sendPlayerRegistration()
 		client.receivesRegistrationConfirmation()
 
@@ -27,11 +27,21 @@ describe 'the Mia server', ->
 
 		client.receivesNotificationThatNobodyWantedToJoin()
 		client.receivesOfferToJoinRoundWithToken 'token2'
+	
+	it 'should start playing a round when a player joins', ->
+		client.sendPlayerRegistration()
+		client.receivesRegistrationConfirmation()
+
+		client.receivesOfferToJoinRoundWithToken 'token1'
+		client.joinsRoundWithToken 'token1'
+
+		client.receivesNotificationThatRoundIsStarting()
 
 class FakeClient
 	constructor: (@serverPort) ->
 		@messages = messages = []
 		@socket = dgram.createSocket 'udp4', (msg) ->
+			console.log "[client] received #{msg.toString()}"
 			messages.push msg.toString()
 		@socket.bind()
 		@clientPort = @socket.address().port
@@ -44,23 +54,33 @@ class FakeClient
 
 	receivesOfferToJoinRoundWithToken: (token) ->
 		@receives "ROUND STARTING;#{token}"
+	
+	joinsRoundWithToken: (token) ->
+		@send "JOIN;#{token}"
 
 	receivesNotificationThatNobodyWantedToJoin: ->
 		@receives 'ROUND CANCELED;no players'
+
+	receivesNotificationThatRoundIsStarting: ->
+		@receives 'ROUND STARTED;testClient:0'
 
 	waitsUntilTimeout: ->
 		waits timeoutForClientAnswers
 
 	receives: (expectedMessage) ->
-		messageReceived = => @hasReceived expectedMessage
-		waitsFor messageReceived, "message #{expectedMessage}", 250
+		runs =>
+			console.log "[client] waiting for #{expectedMessage}..."
+			messageReceived = => @hasReceived expectedMessage
+			waitsFor messageReceived, "message #{expectedMessage}", 250
 
 	hasReceived: (expectedMessage) ->
 		@messages.indexOf(expectedMessage) >= 0
 
 	send: (string) ->
-		buffer = new Buffer(string)
-		@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
+		runs =>
+			console.log "[client] sending #{string}"
+			buffer = new Buffer(string)
+			@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
 
 	shutDown: () ->
 		@socket.close()

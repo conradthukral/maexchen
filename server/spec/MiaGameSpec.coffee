@@ -1,6 +1,7 @@
 class PlayerStub
 	willJoinRound: ->
 	roundCanceled: ->
+	roundStarted: ->
 
 mia = require '../lib/miaGame'
 
@@ -154,6 +155,16 @@ describe 'Mia Game', ->
 			spyOn miaGame, 'permuteCurrentRound'
 			miaGame.startRound()
 			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
+
+		it 'should notify players when starting a new round', ->
+			spyOn player1, 'roundStarted'
+			spyOn player2, 'roundStarted'
+			player1.willJoinRound = accept
+			player2.willJoinRound = accept
+			miaGame.newRound()
+			
+			waitsFor (-> player1.roundStarted.callCount > 0), 50
+			waitsFor (-> player2.roundStarted.callCount > 0), 50
 
 describe 'permutation', ->
 	list1 = list2 = {}
