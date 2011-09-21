@@ -34,6 +34,8 @@ class MiaGame
 		closeJoiningAndStartRound = =>
 			mayJoin = false
 			if round.size() == 0
+				@players.each (player) ->
+					player.roundCanceled 'no players'
 				@newRound()
 			else
 				@startRound()

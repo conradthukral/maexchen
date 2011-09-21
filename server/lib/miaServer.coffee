@@ -2,13 +2,14 @@ dgram = require 'dgram'
 miaGame = require './miaGame'
 
 class RemotePlayer
-	constructor: (@socket, @host, @port) ->
+	constructor: (@socket, @host, @port, @tokenGenerator) ->
 		@sendMessage 'REGISTERED;0'
 
 	willJoinRound: ->
-		console.log 'will join round?'
-		@sendMessage 'ROUND STARTING;token1'
+		@sendMessage "ROUND STARTING;#{@tokenGenerator.generate()}"
 
+	roundCanceled: (reason) ->
+		@sendMessage "ROUND CANCELED;#{reason}"
 
 	sendMessage: (message) ->
 		console.log "sending #{message} to #{@host}:#{@port}"
@@ -16,9 +17,10 @@ class RemotePlayer
 		@socket.send buffer, 0, buffer.length, @port, @host
 
 class Server
-	constructor: (port) ->
+	constructor: (port, @timeout) ->
 		self = this
 		@game = miaGame.createGame()
+		@game.setBroadcastTimeout @timeout
 		@socket = dgram.createSocket 'udp4', (message, rinfo) ->
 			fromHost = rinfo.address
 			fromPort = rinfo.port
@@ -28,14 +30,14 @@ class Server
 
 	handleMessage: (message, fromHost, fromPort) ->
 		console.log "received #{message} from #{fromHost}:#{fromPort}"
-		@game.registerPlayer new RemotePlayer @socket, fromHost, fromPort
+		@game.registerPlayer new RemotePlayer @socket, fromHost, fromPort, @tokenGenerator
 		@game.newRound() # TODO das ist hier keine Gute Idee
 
 	shutDown: ->
 		@socket.close()
 		@game.stop()
 
-	setTokenGenerator: ->
+	setTokenGenerator: (@tokenGenerator) ->
 
-exports.start = (port) ->
-	return new Server port
+exports.start = (port, timeout) ->
+	return new Server port, timeout

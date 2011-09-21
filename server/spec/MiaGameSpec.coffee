@@ -1,5 +1,6 @@
 class PlayerStub
 	willJoinRound: ->
+	roundCanceled: ->
 
 mia = require '../lib/miaGame'
 
@@ -122,6 +123,16 @@ describe 'Mia Game', ->
 			runs ->
 				expect(miaGame.startRound).toHaveBeenCalled()
 			
+		it 'should notify players when nobody joins', ->
+			spyOn player1, 'roundCanceled'
+			spyOn player2, 'roundCanceled'
+			miaGame.setBroadcastTimeout 20
+			runs ->
+				miaGame.newRound()
+			waits 30
+			runs ->
+				expect(player1.roundCanceled).toHaveBeenCalledWith 'no players'
+				expect(player2.roundCanceled).toHaveBeenCalledWith 'no players'
 
 		it 'should not start round, but call newRound(), if nobody joined', ->
 			spyOn miaGame, 'startRound'
