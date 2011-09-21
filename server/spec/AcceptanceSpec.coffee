@@ -36,6 +36,7 @@ describe 'the Mia server', ->
 		client.joinsRoundWithToken 'token1'
 
 		client.receivesNotificationThatRoundIsStarting()
+		# TODO expect YOUR TURN notification 
 
 class FakeClient
 	constructor: (@serverPort) ->

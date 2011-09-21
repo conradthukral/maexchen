@@ -11,6 +11,9 @@ class RemotePlayer
 	willJoinRound: (@joinCallback) ->
 		@sendMessage "ROUND STARTING;#{@tokenGenerator.generate()}"
 
+	# TODO
+	yourTurn: () ->
+
 	roundCanceled: (reason) ->
 		@sendMessage "ROUND CANCELED;#{reason}"
 
