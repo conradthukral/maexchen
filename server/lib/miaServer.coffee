@@ -9,7 +9,8 @@ class RemotePlayer
 		@sendMessage 'REGISTERED;0'
 
 	willJoinRound: (@joinCallback) ->
-		@sendMessage "ROUND STARTING;#{@tokenGenerator.generate()}"
+		@currentToken = @tokenGenerator.generate()
+		@sendMessage "ROUND STARTING;#{@currentToken}"
 
 	# TODO
 	yourTurn: () ->
@@ -20,8 +21,10 @@ class RemotePlayer
 	roundStarted: ->
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
 
-	handleMessage: (message) ->
-		@joinCallback true #TODO check token
+	handleMessage: (messageCommand, messageArgs) ->
+		console.log messageArgs
+		if messageArgs[0] == @currentToken
+			@joinCallback true
 
 	sendMessage: (message) ->
 		console.log "sending '#{message}' to #{@host}:#{@port}"
@@ -33,7 +36,11 @@ class Server
 		handleRawMessage = (message, rinfo) =>
 			fromHost = rinfo.address
 			fromPort = rinfo.port
-			@handleMessage message.toString(), fromHost, fromPort
+			console.log "received '#{message}' from #{fromHost}:#{fromPort}"
+			messageParts = message.toString().split ';'
+			command = messageParts[0]
+			args = messageParts[1..]
+			@handleMessage command, args, fromHost, fromPort
 
 		@players = {}
 		@game = miaGame.createGame()
@@ -42,15 +49,14 @@ class Server
 		@socket.bind port
 		console.log "\nMia server started on port #{port}"
 
-	handleMessage: (message, fromHost, fromPort) ->
-		console.log "received '#{message}' from #{fromHost}:#{fromPort}"
-		if message.startsWith 'REGISTER;'
+	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
+		if messageCommand == 'REGISTER'
 			newPlayer = new RemotePlayer @socket, fromHost, fromPort, @tokenGenerator
 			@addPlayer fromHost, fromPort, newPlayer
 			@game.registerPlayer newPlayer
 			@game.newRound() # TODO das ist hier keine Gute Idee
 		else
-			@playerFor(fromHost, fromPort).handleMessage message
+			@playerFor(fromHost, fromPort).handleMessage messageCommand, messageArgs
 	
 	shutDown: ->
 		@socket.close()

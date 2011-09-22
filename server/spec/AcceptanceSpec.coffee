@@ -24,10 +24,19 @@ describe 'the Mia server', ->
 		client.receivesOfferToJoinRoundWithToken 'token1'
 
 		client.waitsUntilTimeout()
-
 		client.receivesNotificationThatNobodyWantedToJoin()
 		client.receivesOfferToJoinRoundWithToken 'token2'
 	
+	it 'should silently ignore a player who tries to join with the wrong token', ->
+		client.sendPlayerRegistration()
+		client.receivesRegistrationConfirmation()
+
+		client.receivesOfferToJoinRoundWithToken 'token1'
+		client.joinsRoundWithToken 'wrongToken'
+
+		client.waitsUntilTimeout()
+		client.receivesNotificationThatNobodyWantedToJoin()
+
 	it 'should start playing a round when a player joins', ->
 		client.sendPlayerRegistration()
 		client.receivesRegistrationConfirmation()
