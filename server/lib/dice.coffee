@@ -18,11 +18,6 @@ class Dice
 		result += 200 if @isMia()
 		result
 
-rollOneDie = ->
-	Math.floor(Math.random()*6) + 1
-
 exports.create = (die1, die2) ->
 	new Dice(die1, die2)
 
-exports.roll = () ->
-	new Dice(rollOneDie(), rollOneDie())
