@@ -52,14 +52,14 @@ class MiaGame
 
 	startRound: ->
 		@permuteCurrentRound()
-		@currentRound.each (player) =>
+		@currentRound.each (player) ->
 			player.roundStarted()
 		@nextTurn()
 
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		answer = @currentRound.first (player) =>
+		answer = @currentRound.first (player) ->
 			player.yourTurn()
 		switch answer
 			when 'ROLL' then @rollDice()
