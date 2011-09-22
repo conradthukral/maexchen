@@ -47,10 +47,8 @@ describe 'Mia Game', ->
 			spyOn player2, 'willJoinRound'
 			runs ->
 				miaGame.newRound()
-			waits 0
-			runs ->
-				expect(player1.willJoinRound).toHaveBeenCalled()
-				expect(player2.willJoinRound).toHaveBeenCalled()
+			waitsFor (-> player1.willJoinRound.wasCalled), 20
+			waitsFor (-> player2.willJoinRound.wasCalled), 20
 
 		it 'should have player for current round when she wants to', ->
 			runs ->
@@ -58,18 +56,14 @@ describe 'Mia Game', ->
 				player2.willJoinRound = accept
 				miaGame.newRound()
 				expect(miaGame.currentRound).not.toHavePlayer player1
-			waits 0
-
-			runs ->
-				expect(miaGame.currentRound).toHavePlayer player1
-				expect(miaGame.currentRound).toHavePlayer player1
+			waitsFor (-> miaGame.currentRound.hasPlayer player1), 20
+			waitsFor (-> miaGame.currentRound.hasPlayer player2), 20
 
 		it 'should not have player for current round when she does not want to', ->
 			runs ->
 				player1.willJoinRound = deny
 				miaGame.newRound()
-			waits 0
-
+			waits 20
 			runs ->
 				expect(miaGame.currentRound).not.toHavePlayer player1
 
@@ -93,7 +87,7 @@ describe 'Mia Game', ->
 				firstRound = miaGame.currentRound
 			waits 20
 			runs ->
-				player1.willJoinRound = (joinRound) ->
+				player1.willJoinRound = ->
 				miaGame.newRound()
 				secondRound = miaGame.currentRound
 			waits 30
@@ -108,22 +102,18 @@ describe 'Mia Game', ->
 				player1.willJoinRound = accept
 				player2.willJoinRound = accept
 				miaGame.newRound()
-			waits 0
-			runs ->
-				expect(miaGame.startRound).toHaveBeenCalled()
+			waitsFor (-> miaGame.startRound.wasCalled), 20
 
 		it 'should start round after timeout when players are missing', ->
 			spyOn miaGame, 'startRound'
-			miaGame.setBroadcastTimeout 20
+			miaGame.setBroadcastTimeout 40
 			runs ->
 				player1.willJoinRound = accept
 				miaGame.newRound()
-			waits 15
+			waits 20
 			runs ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
-			waits 15
-			runs ->
-				expect(miaGame.startRound).toHaveBeenCalled()
+			waitsFor (-> miaGame.startRound.wasCalled), 30
 			
 		it 'should notify players when nobody joins', ->
 			spyOn player1, 'roundCanceled'
@@ -131,7 +121,7 @@ describe 'Mia Game', ->
 			miaGame.setBroadcastTimeout 20
 			runs ->
 				miaGame.newRound()
-			waits 40
+			waitsFor (-> player1.roundCanceled.wasCalled), 40
 			runs ->
 				expect(player1.roundCanceled).toHaveBeenCalledWith 'no players'
 				expect(player2.roundCanceled).toHaveBeenCalledWith 'no players'
@@ -139,15 +129,14 @@ describe 'Mia Game', ->
 		it 'should not start round, but call newRound(), if nobody joined', ->
 			spyOn miaGame, 'startRound'
 			spyOn(miaGame, 'newRound').andCallThrough()
-			miaGame.setBroadcastTimeout 20
+			miaGame.setBroadcastTimeout 50
 			runs ->
 				miaGame.newRound()
-			waits 15
+			waits 30
 			runs ->
-				expect(miaGame.newRound).toHaveBeenCalled()
 				expect(miaGame.newRound.callCount).toBe 1
 				expect(miaGame.startRound).not.toHaveBeenCalled()
-			waits 25
+			waits 40
 			runs ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 				expect(miaGame.newRound.callCount).toBe 2
@@ -168,8 +157,8 @@ describe 'Mia Game', ->
 			player2.willJoinRound = accept
 			miaGame.newRound()
 			
-			waitsFor (-> player1.roundStarted.callCount > 0), 50
-			waitsFor (-> player2.roundStarted.callCount > 0), 50
+			waitsFor (-> player1.roundStarted.wasCalled), 50
+			waitsFor (-> player2.roundStarted.wasCalled), 50
 
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'
