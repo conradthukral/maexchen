@@ -12,8 +12,9 @@ class RemotePlayer
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "ROUND STARTING;#{@currentToken}"
 
-	# TODO
-	yourTurn: () ->
+	yourTurn: (@playerTurnCallback) ->
+		@currentToken = @tokenGenerator.generate()
+		@sendMessage "YOUR TURN;#{@currentToken}"
 
 	roundCanceled: (reason) ->
 		@sendMessage "ROUND CANCELED;#{reason}"
@@ -22,7 +23,6 @@ class RemotePlayer
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
 
 	handleMessage: (messageCommand, messageArgs) ->
-		console.log messageArgs
 		if messageArgs[0] == @currentToken
 			@joinCallback true
 

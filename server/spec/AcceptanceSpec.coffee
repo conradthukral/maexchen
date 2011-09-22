@@ -45,7 +45,7 @@ describe 'the Mia server', ->
 		client.joinsRoundWithToken 'token1'
 
 		client.receivesNotificationThatRoundIsStarting()
-		# TODO expect YOUR TURN notification 
+		client.isAskedToPlayATurnWithToken 'token2'
 
 class FakeClient
 	constructor: (@serverPort) ->
@@ -73,6 +73,9 @@ class FakeClient
 
 	receivesNotificationThatRoundIsStarting: ->
 		@receives 'ROUND STARTED;testClient:0'
+
+	isAskedToPlayATurnWithToken: (token) ->
+		@receives "YOUR TURN;#{token}"
 
 	waitsUntilTimeout: ->
 		waits timeoutForClientAnswers
