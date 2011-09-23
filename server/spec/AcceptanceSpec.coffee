@@ -1,5 +1,6 @@
 dgram = require 'dgram'
 miaServer = require '../lib/miaServer'
+dice = require '../lib/dice'
 
 timeoutForClientAnswers = 100
 serverPort = 9000
@@ -38,6 +39,8 @@ describe 'the Mia server', ->
 		client.receivesNotificationThatNobodyWantedToJoin()
 
 	it 'should start playing a round when a player joins', ->
+		server.setDiceRoller new FakeDiceRoller dice.create(2, 1)
+
 		client.sendPlayerRegistration()
 		client.receivesRegistrationConfirmation()
 
@@ -46,6 +49,9 @@ describe 'the Mia server', ->
 
 		client.receivesNotificationThatRoundIsStarting()
 		client.isAskedToPlayATurnWithToken 'token2'
+
+		client.rollsWithToken 'token2'
+		client.receivesRolledDiceAndToken dice.create(2, 1), 'token3'
 
 class FakeClient
 	constructor: (@serverPort) ->
@@ -77,6 +83,12 @@ class FakeClient
 	isAskedToPlayATurnWithToken: (token) ->
 		@receives "YOUR TURN;#{token}"
 
+	rollsWithToken: (token) ->
+		@send "ROLL;#{token}"
+
+	receivesRolledDiceAndToken: (dice, token) ->
+		@receives "ROLLED;#{dice.die1},#{dice.die2};#{token}"
+
 	waitsUntilTimeout: ->
 		waits timeoutForClientAnswers
 
@@ -104,4 +116,9 @@ class FakeTokenGenerator
 
 	generate: ->
 		"token#{++@counter}"
+
+
+class FakeDiceRoller
+	constructor: (@dice) ->
+	roll: -> @dice
 

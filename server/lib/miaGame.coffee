@@ -26,9 +26,11 @@ class MiaGame
 		@currentRound = new PlayerList
 		@broadcastTimeout = 200
 		@timeout = null
+		@diceRoller = require './diceRoller'
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
+	setDiceRoller: (@diceRoller) ->
 	stop: -> clearTimeout(@timeout)
 
 	newRound: ->
@@ -54,19 +56,22 @@ class MiaGame
 		@permuteCurrentRound()
 		@currentRound.each (player) ->
 			player.roundStarted()
-		@nextTurn()
+		setTimeout ( => @nextTurn() ), 0
 
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		answer = @currentRound.first (player) ->
-			player.yourTurn()
-		switch answer
-			when 'ROLL' then @rollDice()
-			when 'SEE' then @broadcastActualDice()
-			else @currentPlayerLoses()
+		answer = @currentRound.first (player) =>
+			player.yourTurn (turn) =>
+				switch turn
+					when 'ROLL' then @rollDice()
+					when 'SEE' then @broadcastActualDice()
+					else @currentPlayerLoses()
 
 	rollDice: ->
+		dice = @diceRoller.roll()
+		@currentRound.first (player) ->
+			player.yourRoll(dice)
 
 	broadcastActualDice: ->
 		

@@ -3,6 +3,7 @@ class PlayerStub
 	roundCanceled: ->
 	roundStarted: ->
 	yourTurn: ->
+	yourRoll: ->
 
 mia = require '../lib/miaGame'
 
@@ -10,6 +11,9 @@ describe 'Mia Game', ->
 	miaGame = player1 = player2 = null
 	accept = (question) -> question(true)
 	deny = (question) -> question(false)
+	roll = (question) -> question('ROLL')
+	see = (question) -> question('SEE')
+	garbage = (question) -> question('GARBAGE')
 
 	beforeEach ->
 		miaGame = mia.createGame()
@@ -163,7 +167,7 @@ describe 'Mia Game', ->
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'
 			miaGame.startRound()
-			expect(miaGame.nextTurn).toHaveBeenCalled()
+			waitsFor (-> miaGame.nextTurn.wasCalled), 50
 
 	describe 'next turn', ->
 		beforeEach ->
@@ -180,22 +184,42 @@ describe 'Mia Game', ->
 			expect(player2.yourTurn).not.toHaveBeenCalled()
 
 		it 'should call rollDice, when player wants to roll', ->
-			spyOn(player1, 'yourTurn').andReturn 'ROLL'
+			player1.yourTurn = roll
 			spyOn miaGame, 'rollDice'
 			miaGame.nextTurn()
 			expect(miaGame.rollDice).toHaveBeenCalled()
 
 		it 'should call broadcastActualDice, when player wants to see', ->
-			spyOn(player1, 'yourTurn').andReturn 'SEE'
+			player1.yourTurn = see
 			spyOn miaGame, 'broadcastActualDice'
 			miaGame.nextTurn()
 			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
 
 		it 'should call currentPlayerLoses, when player fails to answer', ->
-			spyOn(player1, 'yourTurn').andReturn 'GARBAGE'
+			player1.yourTurn = garbage
 			spyOn miaGame, 'currentPlayerLoses'
 			miaGame.nextTurn()
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+
+	describe 'roll dice', ->
+		diceRoller =
+			roll: ->
+
+		beforeEach ->
+			miaGame.registerPlayer player1 = new PlayerStub
+			miaGame.registerPlayer player2 = new PlayerStub
+			miaGame.currentRound.add player1
+			miaGame.currentRound.add player2
+			miaGame.setDiceRoller diceRoller
+
+		it 'should inform the player about their roll', ->
+			spyOn(diceRoller, 'roll').andReturn "theDice"
+			spyOn(player1, 'yourRoll')
+
+			miaGame.rollDice()
+			
+			expect(player1.yourRoll).toHaveBeenCalledWith "theDice"
+
 
 describe 'permutation', ->
 	list1 = list2 = {}

@@ -16,6 +16,10 @@ class RemotePlayer
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "YOUR TURN;#{@currentToken}"
 
+	yourRoll: (dice) ->
+		@currentToken = @tokenGenerator.generate()
+		@sendMessage "ROLLED;#{dice};#{@currentToken}"
+
 	roundCanceled: (reason) ->
 		@sendMessage "ROUND CANCELED;#{reason}"
 
@@ -23,8 +27,12 @@ class RemotePlayer
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
 
 	handleMessage: (messageCommand, messageArgs) ->
-		if messageArgs[0] == @currentToken
-			@joinCallback true
+		switch messageCommand
+			when 'JOIN'
+				if messageArgs[0] == @currentToken
+					@joinCallback true
+			when 'ROLL'
+				@playerTurnCallback 'ROLL'
 
 	sendMessage: (message) ->
 		console.log "sending '#{message}' to #{@host}:#{@port}"
@@ -64,6 +72,9 @@ class Server
 
 	setTokenGenerator: (@tokenGenerator) ->
 
+	setDiceRoller: (diceRoller) ->
+		@game.setDiceRoller diceRoller
+	
 	playerFor: (host, port) ->
 		@players["#{host}:#{port}"]
 	
