@@ -38,3 +38,8 @@ describe 'dice', ->
 			expect(lower.isHigherThan(higher)).toBeFalsy()
 
 
+	describe 'string representation', ->
+
+		it 'should be nicely formatted', ->
+			thirtyOne = dice.create 1, 3
+			expect("#{thirtyOne}").toEqual '3,1'

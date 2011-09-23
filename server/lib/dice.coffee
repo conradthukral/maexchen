@@ -12,6 +12,9 @@ class Dice
 	isHigherThan: (otherDice) ->
 		return @valueForOrdering() > otherDice.valueForOrdering()
 
+	toString: () ->
+		"#{@die1},#{@die2}"
+
 	valueForOrdering: () ->
 		result = 10*@die1 + @die2
 		result += 100 if @isDouble()
