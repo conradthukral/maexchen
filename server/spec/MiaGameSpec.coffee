@@ -179,27 +179,33 @@ describe 'Mia Game', ->
 		it 'should tell the first player in round that it is her turn', ->
 			spyOn player1, 'yourTurn'
 			spyOn player2, 'yourTurn'
-			miaGame.nextTurn()
-			expect(player1.yourTurn).toHaveBeenCalled()
-			expect(player2.yourTurn).not.toHaveBeenCalled()
+			runs ->
+				miaGame.nextTurn()
+			waits 10
+			runs ->
+				expect(player1.yourTurn).toHaveBeenCalled()
+				expect(player2.yourTurn).not.toHaveBeenCalled()
 
 		it 'should call rollDice, when player wants to roll', ->
-			player1.yourTurn = roll
-			spyOn miaGame, 'rollDice'
-			miaGame.nextTurn()
-			expect(miaGame.rollDice).toHaveBeenCalled()
+			runs ->
+				player1.yourTurn = roll
+				spyOn miaGame, 'rollDice'
+				miaGame.nextTurn()
+			waitsFor (-> miaGame.rollDice.wasCalled), 10
 
 		it 'should call broadcastActualDice, when player wants to see', ->
-			player1.yourTurn = see
-			spyOn miaGame, 'broadcastActualDice'
-			miaGame.nextTurn()
-			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
+			runs ->
+				player1.yourTurn = see
+				spyOn miaGame, 'broadcastActualDice'
+				miaGame.nextTurn()
+			waitsFor (-> miaGame.broadcastActualDice.wasCalled), 10
 
 		it 'should call currentPlayerLoses, when player fails to answer', ->
-			player1.yourTurn = garbage
-			spyOn miaGame, 'currentPlayerLoses'
-			miaGame.nextTurn()
-			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			runs ->
+				player1.yourTurn = garbage
+				spyOn miaGame, 'currentPlayerLoses'
+				miaGame.nextTurn()
+			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 10
 
 		it 'should call currentPlayerLoses, when player answers after timeout', ->
 			miaGame.setBroadcastTimeout 20
@@ -227,10 +233,11 @@ describe 'Mia Game', ->
 		it 'should inform the player about their roll', ->
 			spyOn(diceRoller, 'roll').andReturn "theDice"
 			spyOn(player1, 'yourRoll')
-
-			miaGame.rollDice()
-			
-			expect(player1.yourRoll).toHaveBeenCalledWith "theDice"
+			runs ->
+				miaGame.rollDice()
+			waits 10
+			runs ->
+				expect(player1.yourRoll).toHaveBeenCalledWith "theDice"
 
 
 describe 'permutation', ->

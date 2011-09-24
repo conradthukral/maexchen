@@ -9,10 +9,12 @@ class PlayerList
 	constructor: -> @players = []
 
 	size: -> @players.length
+	isEmpty: -> @players.length == 0
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
 	first: (fn) ->
-		fn @players[0] if @players[0]?
+		return if @isEmpty()
+		setTimeout (=> fn @players[0]), 0
 
 	each: (fn) -> for player in @players
 		# "do" makes sure, that player is used with the current value
@@ -39,7 +41,7 @@ class MiaGame
 		return if @stopped
 		@currentRound = round = new PlayerList
 		expirer = @startExpirer =>
-			if round.size() == 0
+			if round.isEmpty()
 				@players.each (player) ->
 					player.roundCanceled 'no players'
 				@newRound()
@@ -56,7 +58,7 @@ class MiaGame
 		@permuteCurrentRound()
 		@currentRound.each (player) ->
 			player.roundStarted()
-		setTimeout (=> @nextTurn()), 0
+		@nextTurn()
 
 	permuteCurrentRound: -> @currentRound.permute()
 
