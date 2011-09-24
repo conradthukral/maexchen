@@ -2,6 +2,19 @@ dice = require '../lib/dice'
 
 describe 'dice', ->
 
+	describe 'equals', ->
+		it 'should be true for equal dice', ->
+			first = dice.create 3, 1
+			second = dice.create 1, 3
+			expect(first.equals second).toBeTruthy()
+			expect(second.equals first).toBeTruthy()
+			
+		it 'should be false for different dice', ->
+			first = dice.create 3, 1
+			second = dice.create 2, 3
+			expect(first.equals second).toBeFalsy()
+			expect(first.equals null).toBeFalsy()
+
 	describe 'isHigherThan', ->
 
 		it 'should not be reflexive', ->

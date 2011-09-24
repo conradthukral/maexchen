@@ -9,6 +9,10 @@ class Dice
 	isMia: () ->
 		@die1 == 2 and @die2 = 1
 
+	equals: (other) ->
+		return false unless other?
+		@die1 == other.die1 and @die2 == other.die2
+
 	isHigherThan: (otherDice) ->
 		return @valueForOrdering() > otherDice.valueForOrdering()
 
