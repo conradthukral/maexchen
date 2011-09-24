@@ -35,6 +35,7 @@ class MiaGame
 		@diceRoller = require './diceRoller'
 		@stopped = false
 		@actualDice = null
+		@announcedDice = null
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
@@ -61,6 +62,7 @@ class MiaGame
 	startRound: ->
 		@permuteCurrentRound()
 		@actualDice = null
+		@announcedDice = null
 		@currentRound.each (player) ->
 			player.roundStarted()
 		@nextTurn()
@@ -73,7 +75,7 @@ class MiaGame
 		question = expirer.makeExpiring (turn) =>
 			switch turn
 				when Messages.ROLL then @rollDice()
-				when Messages.SEE then @broadcastActualDice()
+				when Messages.SEE then @showDice()
 				else @currentPlayerLoses()
 
 		@currentRound.first (player) =>
@@ -84,9 +86,18 @@ class MiaGame
 		@currentRound.first (player) ->
 			player.yourRoll(dice)
 
+	showDice: ->
+		@broadcastActualDice()
+		if not @actualDice? or @actualDice.equals(@announcedDice)
+			@currentPlayerLoses()
+		else
+			@lastPlayerLoses()
+
 	broadcastActualDice: ->
 		
 	currentPlayerLoses: ->
+
+	lastPlayerLoses: ->
 
 	startExpirer: (onExpireAction) ->
 		expireCallback.startExpirer

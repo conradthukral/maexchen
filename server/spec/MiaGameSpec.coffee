@@ -6,6 +6,7 @@ class PlayerStub
 	yourRoll: ->
 
 mia = require '../lib/miaGame'
+dice = require '../lib/dice'
 
 describe 'Mia Game', ->
 	miaGame = player1 = player2 = null
@@ -174,6 +175,11 @@ describe 'Mia Game', ->
 			miaGame.startRound()
 			expect(miaGame.actualDice).toBeNull()
 
+		it 'should reset announcedDice', ->
+			miaGame.announcedDice = 'x'
+			miaGame.startRound()
+			expect(miaGame.announcedDice).toBeNull()
+
 	describe 'next turn', ->
 		beforeEach ->
 			miaGame.registerPlayer player1 = new PlayerStub
@@ -199,12 +205,12 @@ describe 'Mia Game', ->
 				miaGame.nextTurn()
 			waitsFor (-> miaGame.rollDice.wasCalled), 10
 
-		it 'should call broadcastActualDice, when player wants to see', ->
-			spyOn miaGame, 'broadcastActualDice'
+		it 'should call showDice, when player wants to see', ->
+			spyOn miaGame, 'showDice'
 			runs ->
 				player1.yourTurn = see
 				miaGame.nextTurn()
-			waitsFor (-> miaGame.broadcastActualDice.wasCalled), 10
+			waitsFor (-> miaGame.showDice.wasCalled), 10
 
 		it 'should call currentPlayerLoses, when player fails to answer', ->
 			spyOn miaGame, 'currentPlayerLoses'
@@ -257,6 +263,35 @@ describe 'Mia Game', ->
 		it 'should store the actual roll', ->
 			miaGame.rollDice()
 			expect(miaGame.actualDice).toBe 'theDice'
+
+	describe 'when player wants to see', ->
+		beforeEach ->
+			spyOn miaGame, 'currentPlayerLoses'
+			spyOn miaGame, 'lastPlayerLoses'
+
+		it 'should broadcast actual dice', ->
+			spyOn miaGame, 'broadcastActualDice'
+			miaGame.showDice()
+			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
+
+		it 'should make current player lose when no dice are available', ->
+			miaGame.showDice()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
+
+		it 'should make last player lose when actualDice differ from announcedDice', ->
+			miaGame.actualDice = dice.create 2, 3
+			miaGame.announcedDice = dice.create 1, 3
+			miaGame.showDice()
+			expect(miaGame.currentPlayerLoses).not.toHaveBeenCalled()
+			expect(miaGame.lastPlayerLoses).toHaveBeenCalled()
+
+		it 'should make current player lose when actualDice are same as announcedDice', ->
+			miaGame.actualDice = dice.create 2, 3
+			miaGame.announcedDice = dice.create 2, 3
+			miaGame.showDice()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
 
 describe 'permutation', ->
 	list1 = list2 = {}
