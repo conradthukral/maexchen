@@ -7,7 +7,7 @@ class Dice
 		@die1 == @die2
 
 	isMia: () ->
-		@die1 == 2 and @die2 = 1
+		@die1 == 2 and @die2 == 1
 
 	equals: (other) ->
 		return false unless other?

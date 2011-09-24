@@ -36,6 +36,10 @@ describe 'dice', ->
 			expectDiceOrder sixtyFive, doubleOne
 			expectDiceOrder doubleOne, doubleSix
 
+		it 'should not declare double two as mia', ->
+			doubleTwo = dice.create 2, 2
+			expect(doubleTwo.isMia()).toBeFalsy()
+
 		it 'should order mia correctly', ->
 			mia = dice.create 2, 1
 			doubleSix = dice.create 6, 6
