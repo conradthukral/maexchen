@@ -83,8 +83,33 @@ class MiaGame
 
 	rollDice: ->
 		@actualDice = dice = @diceRoller.roll()
+
+		expirer = @startExpirer @currentPlayerLoses
+
+		announce = expirer.makeExpiring (announcedDice) =>
+			@announce(announcedDice)
+		
 		@currentRound.first (player) ->
-			player.yourRoll(dice)
+			player.yourRoll dice, announce
+
+	announce: (dice) ->
+		@broadcastAnnouncedDice()
+		if not @announcedDice? or dice.isHigherThan @announcedDice
+			@announcedDice = dice
+			if dice.isMia()
+				@miaIsAnnounced()
+		else
+			@currentPlayerLoses()
+
+	broadcastAnnouncedDice: ->
+
+	miaIsAnnounced: ->
+		if @actualDice.isMia()
+			@broadcastMia()
+		else
+			@currentPlayerLoses()
+
+	broadcastMia: ->
 
 	showDice: ->
 		@broadcastActualDice()

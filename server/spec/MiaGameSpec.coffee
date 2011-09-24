@@ -232,14 +232,12 @@ describe 'Mia Game', ->
 
 		it 'should call currentPlayerLoses, when player does not answer', ->
 			spyOn miaGame, 'currentPlayerLoses'
-			spyOn miaGame, 'rollDice'
 			runs ->
 				player1.yourTurn = ->
 				miaGame.nextTurn()
 			waits 30
 			runs ->
 				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
-				expect(miaGame.rollDice).not.toHaveBeenCalled()
 
 	describe 'roll dice', ->
 		diceRoller =
@@ -247,22 +245,91 @@ describe 'Mia Game', ->
 
 		beforeEach ->
 			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
 			miaGame.currentRound.add player1
-			miaGame.currentRound.add player2
 			miaGame.setDiceRoller diceRoller
+			miaGame.setBroadcastTimeout 20
 
 		it 'should inform the player about their roll', ->
-			spyOn(player1, 'yourRoll')
+			spyOn player1, 'yourRoll'
 			runs ->
 				miaGame.rollDice()
-			waits 10
+			waitsFor (-> player1.yourRoll.wasCalled), 10
 			runs ->
-				expect(player1.yourRoll).toHaveBeenCalledWith 'theDice'
+				expect(player1.yourRoll.mostRecentCall.args[0]).toBe 'theDice'
 
 		it 'should store the actual roll', ->
 			miaGame.rollDice()
 			expect(miaGame.actualDice).toBe 'theDice'
+
+		it 'should call announce with the announced dice', ->
+			spyOn miaGame, 'announce'
+			runs ->
+				player1.yourRoll = (dice, announce) -> announce 'announcedDice'
+				miaGame.rollDice()
+			waitsFor (-> miaGame.announce.wasCalled), 10
+			runs ->
+				expect(miaGame.announce).toHaveBeenCalledWith 'announcedDice'
+
+		it 'should make the player lose, when she does not announce within time', ->
+			spyOn miaGame, 'announce'
+			spyOn miaGame, 'currentPlayerLoses'
+			runs ->
+				player1.yourRoll = (dice, announce) -> setTimeout announce, 30
+				miaGame.rollDice()
+			waits 50
+			runs ->
+				expect(miaGame.announce).not.toHaveBeenCalled()
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+
+		it 'should make the player lose, when she does not announce', ->
+			spyOn miaGame, 'currentPlayerLoses'
+			runs ->
+				player1.yourRoll = (dice, announce) ->
+				miaGame.rollDice()
+			waits 30
+			runs ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+
+	describe 'annouce', ->
+		it 'should store the announced roll, when she announces higher', ->
+			miaGame.announcedDice = dice.create 2, 2
+			someDice = dice.create 3, 3
+			miaGame.announce(someDice)
+			expect(miaGame.announcedDice).toBe someDice
+
+		it 'should store the announced roll on first announcement', ->
+			someDice = dice.create 3, 3
+			miaGame.announce(someDice)
+			expect(miaGame.announcedDice).toBe someDice
+
+		it 'should make the player lose, when she does not announce higher', ->
+			spyOn miaGame, 'currentPlayerLoses'
+			miaGame.announcedDice = dice.create 3, 3
+			miaGame.announce(dice.create 2, 2)
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+
+		it 'should broadcast, when she announces wrongly', ->
+			spyOn miaGame, 'broadcastAnnouncedDice'
+			miaGame.announcedDice = dice.create 3, 3
+			miaGame.announce(dice.create 2, 2)
+			expect(miaGame.broadcastAnnouncedDice).toHaveBeenCalled()
+
+		it 'should broadcast the announced roll, when she announces validly', ->
+			spyOn miaGame, 'broadcastAnnouncedDice'
+			miaGame.announce(dice.create 3, 3)
+			expect(miaGame.broadcastAnnouncedDice).toHaveBeenCalled()
+
+		it 'should broadcast mia, when she announces mia correctly', ->
+			spyOn miaGame, 'broadcastMia'
+			miaGame.actualDice = dice.create 2, 1
+			miaGame.announce(dice.create 1, 2)
+			expect(miaGame.broadcastMia).toHaveBeenCalled()
+
+		it 'should make player lose, when she announces mia wrongly', ->
+			spyOn miaGame, 'currentPlayerLoses'
+			miaGame.actualDice = dice.create 2, 2
+			miaGame.announce(dice.create 1, 2)
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 
 	describe 'when player wants to see', ->
 		beforeEach ->

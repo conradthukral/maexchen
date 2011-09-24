@@ -16,7 +16,7 @@ class RemotePlayer
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "YOUR TURN;#{@currentToken}"
 
-	yourRoll: (dice) ->
+	yourRoll: (dice, announce) ->
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "ROLLED;#{dice};#{@currentToken}"
 
