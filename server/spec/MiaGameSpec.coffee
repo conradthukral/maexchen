@@ -169,6 +169,11 @@ describe 'Mia Game', ->
 			miaGame.startRound()
 			waitsFor (-> miaGame.nextTurn.wasCalled), 50
 
+		it 'should reset actualDice', ->
+			miaGame.actualDice = 'x'
+			miaGame.startRound()
+			expect(miaGame.actualDice).toBeNull()
+
 	describe 'next turn', ->
 		beforeEach ->
 			miaGame.registerPlayer player1 = new PlayerStub
@@ -232,7 +237,7 @@ describe 'Mia Game', ->
 
 	describe 'roll dice', ->
 		diceRoller =
-			roll: ->
+			roll: -> 'theDice'
 
 		beforeEach ->
 			miaGame.registerPlayer player1 = new PlayerStub
@@ -242,14 +247,16 @@ describe 'Mia Game', ->
 			miaGame.setDiceRoller diceRoller
 
 		it 'should inform the player about their roll', ->
-			spyOn(diceRoller, 'roll').andReturn "theDice"
 			spyOn(player1, 'yourRoll')
 			runs ->
 				miaGame.rollDice()
 			waits 10
 			runs ->
-				expect(player1.yourRoll).toHaveBeenCalledWith "theDice"
+				expect(player1.yourRoll).toHaveBeenCalledWith 'theDice'
 
+		it 'should store the actual roll', ->
+			miaGame.rollDice()
+			expect(miaGame.actualDice).toBe 'theDice'
 
 describe 'permutation', ->
 	list1 = list2 = {}

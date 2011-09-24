@@ -30,6 +30,7 @@ class MiaGame
 		@broadcastTimeout = 200
 		@diceRoller = require './diceRoller'
 		@stopped = false
+		@actualDice = null
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
@@ -55,6 +56,7 @@ class MiaGame
 
 	startRound: ->
 		@permuteCurrentRound()
+		@actualDice = null
 		@currentRound.each (player) ->
 			player.roundStarted()
 		@nextTurn()
@@ -74,7 +76,7 @@ class MiaGame
 			player.yourTurn question
 
 	rollDice: ->
-		dice = @diceRoller.roll()
+		@actualDice = dice = @diceRoller.roll()
 		@currentRound.first (player) ->
 			player.yourRoll(dice)
 
