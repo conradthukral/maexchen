@@ -4,14 +4,14 @@ expireCallback = require '../lib/expireCallback'
 Array::shuffle = -> @sort -> 0.5 - Math.random()
 
 class PlayerList
-	permuteArray = (array) -> array.shuffle()
-
 	constructor: -> @players = []
 
 	size: -> @players.length
 	isEmpty: -> @players.length == 0
 	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
+	permute: -> @players.shuffle()
+
 	first: (fn) ->
 		return if @isEmpty()
 		setTimeout (=> fn @players[0]), 0
@@ -22,7 +22,6 @@ class PlayerList
 		do (player) -> 
 			# call non-blocking
 			setTimeout (-> fn player), 0
-	permute: -> @players = permuteArray @players
 
 class MiaGame
 	constructor: ->
