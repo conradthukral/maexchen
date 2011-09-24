@@ -1,3 +1,5 @@
+expireCallback = require '../lib/expireCallback'
+
 # See http://coffeescriptcookbook.com/chapters/arrays/shuffling-array-elements
 Array::shuffle = -> @sort -> 0.5 - Math.random()
 
@@ -25,19 +27,18 @@ class MiaGame
 		@players = new PlayerList
 		@currentRound = new PlayerList
 		@broadcastTimeout = 200
-		@timeout = null
 		@diceRoller = require './diceRoller'
+		@stopped = false
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
 	setDiceRoller: (@diceRoller) ->
-	stop: -> clearTimeout(@timeout)
+	stop: -> @stopped = true
 
 	newRound: ->
+		return if @stopped
 		@currentRound = round = new PlayerList
-		mayJoin = true
-		closeJoiningAndStartRound = =>
-			mayJoin = false
+		expirer = @startExpirer =>
 			if round.size() == 0
 				@players.each (player) ->
 					player.roundCanceled 'no players'
@@ -45,12 +46,16 @@ class MiaGame
 			else
 				@startRound()
 
-		@timeout = setTimeout closeJoiningAndStartRound, @broadcastTimeout
-
 		@players.each (player) => # "=>" binds this to MiaGame
-			player.willJoinRound (join) =>
-				round.add player if join and mayJoin
+			answerJoining = (join) =>
+				round.add player if join
 				@startRound() if round.size() == @players.size()
+			player.willJoinRound expirer.makeExpiring(answerJoining)
+
+	startExpirer: (onExpireAction) ->
+		expireCallback.startExpirer
+			timeout: @broadcastTimeout
+			onExpire: onExpireAction
 
 	startRound: ->
 		@permuteCurrentRound()
