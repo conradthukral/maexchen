@@ -175,6 +175,7 @@ describe 'Mia Game', ->
 			miaGame.registerPlayer player2 = new PlayerStub
 			miaGame.currentRound.add player1
 			miaGame.currentRound.add player2
+			miaGame.setBroadcastTimeout 20
 
 		it 'should tell the first player in round that it is her turn', ->
 			spyOn player1, 'yourTurn'
@@ -187,34 +188,44 @@ describe 'Mia Game', ->
 				expect(player2.yourTurn).not.toHaveBeenCalled()
 
 		it 'should call rollDice, when player wants to roll', ->
+			spyOn miaGame, 'rollDice'
 			runs ->
 				player1.yourTurn = roll
-				spyOn miaGame, 'rollDice'
 				miaGame.nextTurn()
 			waitsFor (-> miaGame.rollDice.wasCalled), 10
 
 		it 'should call broadcastActualDice, when player wants to see', ->
+			spyOn miaGame, 'broadcastActualDice'
 			runs ->
 				player1.yourTurn = see
-				spyOn miaGame, 'broadcastActualDice'
 				miaGame.nextTurn()
 			waitsFor (-> miaGame.broadcastActualDice.wasCalled), 10
 
 		it 'should call currentPlayerLoses, when player fails to answer', ->
+			spyOn miaGame, 'currentPlayerLoses'
 			runs ->
 				player1.yourTurn = garbage
-				spyOn miaGame, 'currentPlayerLoses'
 				miaGame.nextTurn()
 			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 10
 
 		it 'should call currentPlayerLoses, when player answers after timeout', ->
-			miaGame.setBroadcastTimeout 20
+			spyOn miaGame, 'currentPlayerLoses'
+			spyOn miaGame, 'rollDice'
 			runs ->
 				player1.yourTurn = (question) -> setTimeout (-> roll(question)), 30
-				spyOn miaGame, 'currentPlayerLoses'
-				spyOn miaGame, 'rollDice'
 				miaGame.nextTurn()
 			waits 50
+			runs ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+				expect(miaGame.rollDice).not.toHaveBeenCalled()
+
+		it 'should call currentPlayerLoses, when player does not answer', ->
+			spyOn miaGame, 'currentPlayerLoses'
+			spyOn miaGame, 'rollDice'
+			runs ->
+				player1.yourTurn = ->
+				miaGame.nextTurn()
+			waits 30
 			runs ->
 				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 				expect(miaGame.rollDice).not.toHaveBeenCalled()
