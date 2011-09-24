@@ -17,8 +17,7 @@ module ::Guard
     end
 
     def run_all
-      jasmineOutput = runJasmine
-      UI.info jasmineOutput
+      jasmineOutput = runJasmine 'spec'
       notifyAboutJasmineOutput jasmineOutput
     end
 
@@ -28,8 +27,15 @@ module ::Guard
 
   private
 
-    def runJasmine
-      `#{jasmineNodePath} --coffee spec 2>&1`
+    def runJasmine(specsToRun)
+      jasmineCommand = "#{jasmineNodePath} --coffee #{specsToRun} 2>&1"
+      pipe = IO.popen(jasmineCommand)
+      lines = []
+      while line = pipe.gets
+        UI.info line.strip
+        lines << line
+      end
+      lines.join
     end
 
     def jasmineNodePath
