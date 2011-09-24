@@ -32,7 +32,7 @@ class RemotePlayer
 				if messageArgs[0] == @currentToken
 					@joinCallback true
 			when 'ROLL'
-				@playerTurnCallback 'ROLL'
+				@playerTurnCallback miaGame.Messages.ROLL
 
 	sendMessage: (message) ->
 		console.log "sending '#{message}' to #{@host}:#{@port}"

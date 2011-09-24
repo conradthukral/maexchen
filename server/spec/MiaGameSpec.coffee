@@ -11,8 +11,8 @@ describe 'Mia Game', ->
 	miaGame = player1 = player2 = null
 	accept = (question) -> question(true)
 	deny = (question) -> question(false)
-	roll = (question) -> question('ROLL')
-	see = (question) -> question('SEE')
+	roll = (question) -> question(mia.Messages.ROLL)
+	see = (question) -> question(mia.Messages.SEE)
 	garbage = (question) -> question('GARBAGE')
 
 	beforeEach ->
