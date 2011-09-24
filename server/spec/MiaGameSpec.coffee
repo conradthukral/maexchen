@@ -201,6 +201,18 @@ describe 'Mia Game', ->
 			miaGame.nextTurn()
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 
+		it 'should call currentPlayerLoses, when player answers after timeout', ->
+			miaGame.setBroadcastTimeout 20
+			runs ->
+				player1.yourTurn = (question) -> setTimeout (-> roll(question)), 30
+				spyOn miaGame, 'currentPlayerLoses'
+				spyOn miaGame, 'rollDice'
+				miaGame.nextTurn()
+			waits 50
+			runs ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+				expect(miaGame.rollDice).not.toHaveBeenCalled()
+
 	describe 'roll dice', ->
 		diceRoller =
 			roll: ->

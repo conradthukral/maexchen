@@ -52,26 +52,25 @@ class MiaGame
 				@startRound() if round.size() == @players.size()
 			player.willJoinRound expirer.makeExpiring(answerJoining)
 
-	startExpirer: (onExpireAction) ->
-		expireCallback.startExpirer
-			timeout: @broadcastTimeout
-			onExpire: onExpireAction
-
 	startRound: ->
 		@permuteCurrentRound()
 		@currentRound.each (player) ->
 			player.roundStarted()
-		setTimeout ( => @nextTurn() ), 0
+		setTimeout (=> @nextTurn()), 0
 
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		answer = @currentRound.first (player) =>
-			player.yourTurn (turn) =>
-				switch turn
-					when 'ROLL' then @rollDice()
-					when 'SEE' then @broadcastActualDice()
-					else @currentPlayerLoses()
+		expirer = @startExpirer @currentPlayerLoses
+
+		question = expirer.makeExpiring (turn) =>
+			switch turn
+				when 'ROLL' then @rollDice()
+				when 'SEE' then @broadcastActualDice()
+				else @currentPlayerLoses()
+
+		@currentRound.first (player) =>
+			player.yourTurn question
 
 	rollDice: ->
 		dice = @diceRoller.roll()
@@ -82,6 +81,10 @@ class MiaGame
 		
 	currentPlayerLoses: ->
 
+	startExpirer: (onExpireAction) ->
+		expireCallback.startExpirer
+			timeout: @broadcastTimeout
+			onExpire: onExpireAction
 
 exports.createGame = -> new MiaGame
 
