@@ -36,6 +36,7 @@ class MiaGame
 		@stopped = false
 		@actualDice = null
 		@announcedDice = null
+		@currentPlayer = null
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
@@ -70,6 +71,8 @@ class MiaGame
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
+		@currentRound.first (player) => @currentPlayer = player
+
 		expirer = @startExpirer @currentPlayerLoses
 
 		question = expirer.makeExpiring (turn) =>
@@ -78,7 +81,7 @@ class MiaGame
 				when Messages.SEE then @showDice()
 				else @currentPlayerLoses()
 
-		@currentRound.first (player) =>
+		@currentRound.first (player) ->
 			player.yourTurn question
 
 	rollDice: ->
@@ -102,6 +105,8 @@ class MiaGame
 			@currentPlayerLoses()
 
 	broadcastAnnouncedDice: ->
+		@currentRound.each (player) =>
+			player.announcedDiceBy @announcedDice, @currentPlayer
 
 	miaIsAnnounced: ->
 		if @actualDice.isMia()
