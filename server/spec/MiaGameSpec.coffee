@@ -10,7 +10,7 @@ mia = require '../lib/miaGame'
 dice = require '../lib/dice'
 
 describe 'Mia Game', ->
-	miaGame = player1 = player2 = player3 = null
+	miaGame = player1 = player2 = player3 = registerPlayers = null
 	accept = (question) -> question(true)
 	deny = (question) -> question(false)
 	roll = (question) -> question(mia.Messages.ROLL)
@@ -19,15 +19,21 @@ describe 'Mia Game', ->
 
 	beforeEach ->
 		miaGame = mia.createGame()
+		players = [new PlayerStub, new PlayerStub, new PlayerStub]
+		player1 = players[0]
+		player2 = players[1]
+		player3 = players[2]
 		this.addMatchers
 			toHavePlayer: (player) -> this.actual.hasPlayer player
+
+		registerPlayers = (numbers...) ->
+			for number in numbers
+				miaGame.registerPlayer players[number - 1]
 
 	afterEach ->
 		miaGame.stop()
 
 	it 'accepts players to register', ->
-		player1 = {}
-		player2 = {}
 		expect(miaGame.players).not.toHavePlayer player1
 		miaGame.registerPlayer player1
 
@@ -45,8 +51,7 @@ describe 'Mia Game', ->
 	describe 'new round', ->
 
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
+			registerPlayers 1, 2
 
 		it 'should broadcast new round', ->
 			spyOn player1, 'willJoinRound'
@@ -183,8 +188,7 @@ describe 'Mia Game', ->
 
 	describe 'next turn', ->
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
+			registerPlayers 1, 2
 			miaGame.currentRound.add player1
 			miaGame.currentRound.add player2
 			miaGame.setBroadcastTimeout 20
@@ -253,7 +257,7 @@ describe 'Mia Game', ->
 			roll: -> 'theDice'
 
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
+			miaGame.registerPlayer player1
 			miaGame.currentRound.add player1
 			miaGame.setDiceRoller diceRoller
 			miaGame.setBroadcastTimeout 20
@@ -371,9 +375,7 @@ describe 'Mia Game', ->
 
 	describe 'broadcast announced dice', ->
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
-			miaGame.registerPlayer player3 = new PlayerStub
+			registerPlayers 1, 2, 3
 			miaGame.currentRound.add player2
 			miaGame.currentRound.add player3
 			
