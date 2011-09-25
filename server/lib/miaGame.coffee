@@ -73,7 +73,7 @@ class MiaGame
 	nextTurn: ->
 		@currentRound.first (player) => @currentPlayer = player
 
-		expirer = @startExpirer @currentPlayerLoses
+		expirer = @startExpirer (=> @currentPlayerLoses()), true
 
 		question = expirer.makeExpiring (turn) =>
 			switch turn
@@ -87,7 +87,7 @@ class MiaGame
 	rollDice: ->
 		@actualDice = dice = @diceRoller.roll()
 
-		expirer = @startExpirer @currentPlayerLoses
+		expirer = @startExpirer (=> @currentPlayerLoses()), true
 
 		announce = expirer.makeExpiring (announcedDice) =>
 			@announce(announcedDice)
@@ -126,13 +126,16 @@ class MiaGame
 	broadcastActualDice: ->
 		
 	currentPlayerLoses: ->
+		@currentRound.each (player) =>
+			player.playerLost @currentPlayer
 
 	lastPlayerLoses: ->
 
-	startExpirer: (onExpireAction) ->
+	startExpirer: (onExpireAction, cancelExpireAction = false) ->
 		expireCallback.startExpirer
 			timeout: @broadcastTimeout
-			onExpire: onExpireAction
+			onExpire: onExpireAction ? ->
+			cancelExpireAction: cancelExpireAction
 
 exports.createGame = -> new MiaGame
 

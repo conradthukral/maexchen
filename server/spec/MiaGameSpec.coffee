@@ -5,6 +5,7 @@ class PlayerStub
 	yourTurn: ->
 	yourRoll: ->
 	announcedDiceBy: ->
+	playerLost: ->
 
 mia = require '../lib/miaGame'
 dice = require '../lib/dice'
@@ -392,6 +393,29 @@ describe 'Mia Game', ->
 				expect(player2.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
 				expect(player3.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
 				expect(player1.announcedDiceBy).not.toHaveBeenCalled()
+
+	describe 'current player loses', ->
+		beforeEach ->
+			registerPlayers 1, 2, 3
+			miaGame.currentRound.add player2
+			miaGame.currentRound.add player3
+
+		it 'should broadcast player lost to everyone in the round', ->
+			spyOn player1, 'playerLost'
+			spyOn player2, 'playerLost'
+			spyOn player3, 'playerLost'
+			runs ->
+				miaGame.currentPlayer = player2
+				miaGame.currentPlayerLoses()
+			waitsFor (-> player2.playerLost.wasCalled), 10
+			runs ->
+				expect(player2.playerLost).toHaveBeenCalledWith player2
+				expect(player3.playerLost).toHaveBeenCalledWith player2
+				expect(player1.playerLost).not.toHaveBeenCalled()
+
+#	describe 'broadcast mia', ->
+#		it 'should announce that the following player loses', ->
+			
 
 describe 'permutation', ->
 	list1 = list2 = {}
