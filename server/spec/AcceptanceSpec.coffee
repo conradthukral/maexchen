@@ -6,6 +6,12 @@ timeoutForClientAnswers = 100
 serverPort = 9000
 server = null
 
+setupFakeClient = (clientName) ->
+	result = new FakeClient serverPort, clientName
+	result.sendPlayerRegistration()
+	result.receivesRegistrationConfirmation()
+	result
+
 describe 'the Mia server', ->
 
 	beforeEach ->
@@ -20,7 +26,6 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			client = new FakeClient serverPort
-			server.startGame()
 
 		afterEach ->
 			client.shutDown()
@@ -29,27 +34,29 @@ describe 'the Mia server', ->
 			client.sendPlayerRegistration()
 			client.receivesRegistrationConfirmation()
 
+	describe 'round setup', ->
+
+		client = null
+
+		beforeEach ->
+			client = setupFakeClient 'testClient'
+			runs -> server.startGame()
+
+		afterEach ->
+			client.shutDown()
+
 		it 'should keep trying to start a round while nobody joins', ->
-			client.sendPlayerRegistration()
-
 			client.receivesOfferToJoinRound()
-			client.waitsUntilTimeout()
-
 			client.receivesNotificationThatNobodyWantedToJoin()
+			
 			client.receivesOfferToJoinRound()
 	
 		it 'should silently ignore a player who tries to join with the wrong token', ->
-			client.sendPlayerRegistration()
-
 			client.receivesOfferToJoinRound()
 			client.joinsRoundWithToken 'wrongToken'
-
-			client.waitsUntilTimeout()
 			client.receivesNotificationThatNobodyWantedToJoin()
 
 		it 'should start a round when a player joins', ->
-			client.sendPlayerRegistration()
-
 			client.receivesOfferToJoinRound()
 			client.joinsRound()
 
@@ -59,12 +66,6 @@ describe 'the Mia server', ->
 
 		client1 = null
 		client2 = null
-
-		setupFakeClient = (clientName) ->
-			result = new FakeClient serverPort, clientName
-			result.sendPlayerRegistration()
-			result.receivesRegistrationConfirmation()
-			result
 
 		keepServerFromPermutingThePlayers = ->
 			server.game.permuteCurrentRound = ->
@@ -102,10 +103,10 @@ describe 'the Mia server', ->
 class FakeClient
 	constructor: (@serverPort, @name) ->
 		@name = 'client' unless @name?
-		@messages = messages = []
+		@messages = []
 		@socket = dgram.createSocket 'udp4', (msg) =>
 			# console.log "[#{@name}] received #{msg.toString()}"
-			messages.push msg.toString()
+			@messages.push msg.toString()
 		@socket.bind()
 		@clientPort = @socket.address().port
 		@currentToken = 'noTokenReceived'
@@ -149,9 +150,6 @@ class FakeClient
 	receivesDiceAnnouncement: (playerName, dice) ->
 		@receives "ANNOUNCED;#{playerName};#{dice}"
 
-	waitsUntilTimeout: ->
-		waits timeoutForClientAnswers
-
 	receivesWithAppendedToken: (expectedMessage) ->
 		regex = new RegExp "#{expectedMessage};([^;]*)", 'g'
 		matcher = (message) =>
@@ -171,8 +169,12 @@ class FakeClient
 			waitsFor messageReceived, messageForDisplay, 250
 
 	hasReceivedMessageMatching: (matcher) ->
-		for message in @messages
-			return true if matcher(message)
+		for i in [0..@messages.length]
+			message = @messages[i]
+			if matcher(message)
+				@messages = @messages[i+1..]
+				return true
+		@messages = []
 		return false
 
 	send: (string) ->
