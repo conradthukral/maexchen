@@ -10,7 +10,6 @@ describe 'the Mia server', ->
 
 	beforeEach ->
 		server = miaServer.start serverPort, timeoutForClientAnswers
-		server.setTokenGenerator new FakeTokenGenerator
 
 	afterEach ->
 		server.shutDown()
@@ -184,14 +183,6 @@ class FakeClient
 
 	shutDown: () ->
 		@socket.close()
-
-class FakeTokenGenerator
-	constructor: ->
-		@counter = 0
-
-	generate: ->
-		"token#{++@counter}"
-
 
 class FakeDiceRoller
 	constructor: (@dice) ->
