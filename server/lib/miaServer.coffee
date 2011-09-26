@@ -9,21 +9,51 @@ String::startsWith = (prefix) ->
 
 generateToken = -> uuid()
 
+class InactiveState
+	handleMessage: (messageCommand, messageArgs) ->
+
+class WaitingForJoinState
+	constructor: (@expectedToken, @joinCallback) ->
+	handleMessage: (messageCommand, messageArgs) ->
+		actualToken = messageArgs[0]
+		if messageCommand == 'JOIN' and actualToken == @expectedToken
+			@joinCallback true
+		new InactiveState
+
+class WaitingForTurnState
+	constructor: (@token, @callback) ->
+	handleMessage: (command, args) ->
+		if command == 'ROLL' # TODO token prüfen
+			@callback miaGame.Messages.ROLL
+		new InactiveState
+
+class WaitingForAnnounceState
+	constructor: (@token, @callback) ->
+	handleMessage: (command, args) ->
+		if command == 'ANNOUNCE' # TODO token prüfen
+			announcedDice = dice.parse args[0]
+			@callback announcedDice
+		new InactiveState
+
 class RemotePlayer
 	constructor: (@name, @socket, @host, @port) ->
 		@sendMessage 'REGISTERED;0'
+		@currentState = new InactiveState
 
-	willJoinRound: (@joinCallback) ->
-		@currentToken = generateToken()
-		@sendMessage "ROUND STARTING;#{@currentToken}"
+	willJoinRound: (callback) ->
+		token = generateToken()
+		@currentState = new WaitingForJoinState(token, callback)
+		@sendMessage "ROUND STARTING;#{token}"
 
-	yourTurn: (@playerTurnCallback) ->
-		@currentToken = generateToken()
-		@sendMessage "YOUR TURN;#{@currentToken}"
+	yourTurn: (callback) ->
+		token = generateToken()
+		@currentState = new WaitingForTurnState(token, callback)
+		@sendMessage "YOUR TURN;#{token}"
 
-	yourRoll: (dice, @announceCallback) ->
-		@currentToken = generateToken()
-		@sendMessage "ROLLED;#{dice};#{@currentToken}"
+	yourRoll: (dice, callback) ->
+		token = generateToken()
+		@currentState = new WaitingForAnnounceState(token, callback)
+		@sendMessage "ROLLED;#{dice};#{token}"
 
 	roundCanceled: (reason) ->
 		@sendMessage "ROUND CANCELED;#{reason}"
@@ -37,15 +67,7 @@ class RemotePlayer
 	playerLost: (player) ->
 
 	handleMessage: (messageCommand, messageArgs) ->
-		switch messageCommand
-			when 'JOIN'
-				if messageArgs[0] == @currentToken
-					@joinCallback true
-			when 'ROLL'
-				@playerTurnCallback miaGame.Messages.ROLL
-			when 'ANNOUNCE'
-				announcedDice = dice.parse messageArgs[0]
-				@announceCallback announcedDice
+		@currentState = @currentState.handleMessage messageCommand, messageArgs
 
 	sendMessage: (message) ->
 		console.log "sending '#{message}' to #{@host}:#{@port}"
