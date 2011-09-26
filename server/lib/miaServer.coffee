@@ -7,23 +7,22 @@ dice = require './dice'
 String::startsWith = (prefix) ->
 	@substring(0, prefix.length) == prefix
 
-class UUIDTokenGenerator
-	generate: -> uuid()
+generateToken = -> uuid()
 
 class RemotePlayer
-	constructor: (@name, @socket, @host, @port, @tokenGenerator) ->
+	constructor: (@name, @socket, @host, @port) ->
 		@sendMessage 'REGISTERED;0'
 
 	willJoinRound: (@joinCallback) ->
-		@currentToken = @tokenGenerator.generate()
+		@currentToken = generateToken()
 		@sendMessage "ROUND STARTING;#{@currentToken}"
 
 	yourTurn: (@playerTurnCallback) ->
-		@currentToken = @tokenGenerator.generate()
+		@currentToken = generateToken()
 		@sendMessage "YOUR TURN;#{@currentToken}"
 
 	yourRoll: (dice, @announceCallback) ->
-		@currentToken = @tokenGenerator.generate()
+		@currentToken = generateToken()
 		@sendMessage "ROLLED;#{dice};#{@currentToken}"
 
 	roundCanceled: (reason) ->
@@ -65,7 +64,6 @@ class Server
 			@handleMessage command, args, fromHost, fromPort
 
 		@players = {}
-		@tokenGenerator = new UUIDTokenGenerator
 		@game = miaGame.createGame()
 		@game.setBroadcastTimeout @timeout
 		@socket = dgram.createSocket 'udp4', handleRawMessage
@@ -78,7 +76,7 @@ class Server
 	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
 		if messageCommand == 'REGISTER'
 			name = messageArgs[0]
-			newPlayer = new RemotePlayer name, @socket, fromHost, fromPort, @tokenGenerator
+			newPlayer = new RemotePlayer name, @socket, fromHost, fromPort
 			@addPlayer fromHost, fromPort, newPlayer
 		else
 			@playerFor(fromHost, fromPort).handleMessage messageCommand, messageArgs
@@ -86,8 +84,6 @@ class Server
 	shutDown: ->
 		@socket.close()
 		@game.stop()
-
-	setTokenGenerator: (@tokenGenerator) ->
 
 	setDiceRoller: (diceRoller) ->
 		@game.setDiceRoller diceRoller
