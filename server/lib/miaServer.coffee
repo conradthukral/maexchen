@@ -29,6 +29,7 @@ class Server
 			name = messageArgs[0]
 			newPlayer = @createPlayer name, fromHost, fromPort
 			@addPlayer fromHost, fromPort, newPlayer
+			newPlayer.registered()
 		else
 			@playerFor(fromHost, fromPort).handleMessage messageCommand, messageArgs
 	

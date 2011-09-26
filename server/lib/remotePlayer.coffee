@@ -3,11 +3,9 @@ uuid = require 'node-uuid'
 miaGame = require './miaGame'
 dice = require './dice'
 
-
-generateToken = -> uuid()
-
 class InactiveState
 	handleMessage: (messageCommand, messageArgs) ->
+		this
 
 class WaitingForJoinState
 	constructor: (@expectedToken, @joinCallback) ->
@@ -15,14 +13,23 @@ class WaitingForJoinState
 		actualToken = messageArgs[0]
 		if messageCommand == 'JOIN' and actualToken == @expectedToken
 			@joinCallback true
-		new InactiveState
+			new InactiveState
+		else
+			this
 
 class WaitingForTurnState
 	constructor: (@token, @callback) ->
 	handleMessage: (command, args) ->
-		if command == 'ROLL' # TODO token prüfen
-			@callback miaGame.Messages.ROLL
-		new InactiveState
+		token = args[0]
+		if (token == @token)
+			switch command
+				when 'ROLL'
+					@callback miaGame.Messages.ROLL
+					return new InactiveState
+				when 'SEE'
+					@callback miaGame.Messages.SEE
+					return new InactiveState
+		this
 
 class WaitingForAnnounceState
 	constructor: (@token, @callback) ->
@@ -34,21 +41,23 @@ class WaitingForAnnounceState
 
 class RemotePlayer
 	constructor: (@name, @sendMessageCallback) ->
-		@sendMessage 'REGISTERED;0'
 		@currentState = new InactiveState
 
+	registered: ->
+		@sendMessage 'REGISTERED;0'
+
 	willJoinRound: (callback) ->
-		token = generateToken()
+		token = @generateToken()
 		@currentState = new WaitingForJoinState(token, callback)
 		@sendMessage "ROUND STARTING;#{token}"
 
 	yourTurn: (callback) ->
-		token = generateToken()
+		token = @generateToken()
 		@currentState = new WaitingForTurnState(token, callback)
 		@sendMessage "YOUR TURN;#{token}"
 
 	yourRoll: (dice, callback) ->
-		token = generateToken()
+		token = @generateToken()
 		@currentState = new WaitingForAnnounceState(token, callback)
 		@sendMessage "ROLLED;#{dice};#{token}"
 
@@ -68,6 +77,9 @@ class RemotePlayer
 
 	sendMessage: (message) ->
 		@sendMessageCallback message
+
+	generateToken: ->
+		uuid()
 
 exports.create = (name, sendMessageCallback) ->
 	new RemotePlayer(name, sendMessageCallback)
