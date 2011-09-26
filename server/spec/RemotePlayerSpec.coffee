@@ -88,3 +88,16 @@ describe "remotePlayer", ->
 			player.handleMessage 'ANNOUNCE', ['2,1', 'theToken']
 			expect(mySpy.callback).toHaveBeenCalled()
 
+	describe 'when round is canceled', ->
+
+		it 'should send ROUND CANCELED', ->
+			player.roundCanceled 'theReason'
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND CANCELED;theReason'
+
+		it 'should ignore previously valid messages', ->
+			player.yourRoll 'theDice', mySpy.callback
+			player.roundCanceled 'theReason'
+			player.handleMessage 'ANNOUNCE', ['2,1', 'theToken']
+
+			expect(mySpy.callback).not.toHaveBeenCalled()
+

@@ -66,6 +66,7 @@ class RemotePlayer
 
 	roundCanceled: (reason) ->
 		@sendMessage "ROUND CANCELED;#{reason}"
+		@currentState = new InactiveState
 
 	roundStarted: ->
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
