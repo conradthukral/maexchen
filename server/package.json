@@ -8,7 +8,8 @@
 	"main": "lib/index.coffee",
 	"files": ["bin", "lib", "package.json"],
 	"dependencies": {
-		"coffee-script": "1.1.x"
+		"coffee-script": "1.1.x",
+		"node-uuid": "1.2.x"
 	},
 	"devDependencies": {
 		"jasmine-node": "1.0.8"

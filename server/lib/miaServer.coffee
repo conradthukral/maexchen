@@ -1,8 +1,12 @@
 dgram = require 'dgram'
 miaGame = require './miaGame'
+uuid = require 'node-uuid'
 
 String::startsWith = (prefix) ->
 	@substring(0, prefix.length) == prefix
+
+class UUIDTokenGenerator
+	generate: -> uuid()
 
 class RemotePlayer
 	constructor: (@socket, @host, @port, @tokenGenerator) ->
@@ -51,6 +55,7 @@ class Server
 			@handleMessage command, args, fromHost, fromPort
 
 		@players = {}
+		@tokenGenerator = new UUIDTokenGenerator
 		@game = miaGame.createGame()
 		@game.setBroadcastTimeout @timeout
 		@socket = dgram.createSocket 'udp4', handleRawMessage
