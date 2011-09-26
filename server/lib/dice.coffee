@@ -32,5 +32,9 @@ exports.parse = (string) ->
 	dice = string.split ','
 	die1 = parseInt dice[0]
 	die2 = parseInt dice[1]
-	new Dice die1, die2
+	if die1 and die2
+		new Dice die1, die2
+	else
+		false
+
 

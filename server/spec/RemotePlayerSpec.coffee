@@ -1,5 +1,6 @@
 remotePlayer = require '../lib/remotePlayer'
 miaGame = require '../lib/miaGame'
+dice = require '../lib/dice'
 
 describe "remotePlayer", ->
 	
@@ -34,17 +35,11 @@ describe "remotePlayer", ->
 			player.handleMessage 'JOIN', ['theToken']
 			expect(mySpy.callback).toHaveBeenCalledWith true
 
-		it 'should ignore a JOIN with the wrong token', ->
+		it 'should ignore invalid messages ', ->
 			player.handleMessage 'JOIN', ['wrongToken']
-			expect(mySpy.callback).not.toHaveBeenCalled()
-
-		it 'should ignore other messages', ->
 			player.handleMessage 'ROLL', ['theToken']
 			expect(mySpy.callback).not.toHaveBeenCalled()
 
-		it 'should accept a valid message after invalid messages', ->
-			player.handleMessage 'ROLL', ['theToken']
-			player.handleMessage 'JOIN', ['wrongToken']
 			player.handleMessage 'JOIN', ['theToken']
 			expect(mySpy.callback).toHaveBeenCalled()
 
@@ -64,18 +59,32 @@ describe "remotePlayer", ->
 			player.handleMessage 'SEE', ['theToken']
 			expect(mySpy.callback).toHaveBeenCalledWith miaGame.Messages.SEE
 
-		it 'should ignore messages with the wrong token', ->
+		it 'should ignore invalid messages', ->
+			player.handleMessage 'JOIN', ['theToken']
 			player.handleMessage 'ROLL', ['wrongToken']
 			expect(mySpy.callback).not.toHaveBeenCalled()
 
-		it 'should ignore other messages', ->
-			player.handleMessage 'JOIN', ['theToken']
-			expect(mySpy.callback).not.toHaveBeenCalled()
-
-		it 'should accept a valid message after invalid messages', ->
-			player.handleMessage 'JOIN', ['theToken']
-			player.handleMessage 'ROLL', ['wrongToken']
 			player.handleMessage 'ROLL', ['theToken']
 			expect(mySpy.callback).toHaveBeenCalled()
 
+	describe 'after rolling dice', ->
+		
+		beforeEach ->
+			player.yourRoll 'theDice', mySpy.callback
+
+		it 'should send ROLLED', ->
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROLLED;theDice;theToken'
+
+		it 'should accept ANNOUNCE', ->
+			player.handleMessage 'ANNOUNCE', ['3,1', 'theToken']
+			expect(mySpy.callback).toHaveBeenCalledWith dice.create(3,1)
+
+		it 'should ignore invalid messages', ->
+			player.handleMessage 'ANNOUNCE', ['3,1', 'wrongToken']
+			player.handleMessage 'ANNOUNCE', ['invalidDice', 'theToken']
+			player.handleMessage 'JOIN', ['theToken']
+			expect(mySpy.callback).not.toHaveBeenCalled()
+
+			player.handleMessage 'ANNOUNCE', ['2,1', 'theToken']
+			expect(mySpy.callback).toHaveBeenCalled()
 

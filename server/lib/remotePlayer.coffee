@@ -34,10 +34,13 @@ class WaitingForTurnState
 class WaitingForAnnounceState
 	constructor: (@token, @callback) ->
 	handleMessage: (command, args) ->
-		if command == 'ANNOUNCE' # TODO token prüfen
-			announcedDice = dice.parse args[0]
+		announcedDice = dice.parse args[0]
+		token = args[1]
+		if command == 'ANNOUNCE' and token == @token and announcedDice
 			@callback announcedDice
-		new InactiveState
+			new InactiveState
+		else
+			this
 
 class RemotePlayer
 	constructor: (@name, @sendMessageCallback) ->

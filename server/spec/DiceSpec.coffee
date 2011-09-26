@@ -66,3 +66,6 @@ describe 'dice', ->
 			parsed = dice.parse thirtyOne.toString()
 			expect(parsed).toEqual thirtyOne
 
+		it 'should not parse garbage', ->
+			expect(dice.parse 'garbage').toBeFalsy()
+
