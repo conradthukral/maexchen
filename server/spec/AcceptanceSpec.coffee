@@ -21,6 +21,7 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			client = new FakeClient serverPort
+			server.startGame()
 
 		afterEach ->
 			client.shutDown()
@@ -58,7 +59,7 @@ describe 'the Mia server', ->
 	describe 'with (hopefully soon two) registered players', ->
 
 		client1 = null
-		#client2 = null
+		client2 = null
 
 		setupFakeClient = (clientName) ->
 			result = new FakeClient serverPort, clientName
@@ -66,24 +67,29 @@ describe 'the Mia server', ->
 			result.receivesRegistrationConfirmation()
 			result
 
+		keepServerFromPermutingThePlayers = ->
+			server.game.permuteCurrentRound = ->
+
 		beforeEach ->
+			keepServerFromPermutingThePlayers()
 			server.setDiceRoller new FakeDiceRoller dice.create(2, 1)
 			client1 = setupFakeClient 'client1'
-			#client2 = setupFakeClient 'client2'
+			client2 = setupFakeClient 'client2'
+			runs -> server.startGame()
 
 		afterEach ->
 			client1.shutDown()
-			#client2.shutDown()
+			client2.shutDown()
 
 		it 'should play a round when (hopefully soon) both players join', =>
 			client1.receivesOfferToJoinRound()
 			client1.joinsRound()
 
-			#client2.receivesOfferToJoinRound()
-			#client2.joinsRound()
+			client2.receivesOfferToJoinRound()
+			client2.joinsRound()
 
 			client1.receivesNotificationThatRoundIsStarting()
-			#client2.receivesNotificationThatRoundIsStarting()
+			client2.receivesNotificationThatRoundIsStarting()
 			
 			client1.isAskedToPlayATurn()
 
@@ -92,7 +98,7 @@ describe 'the Mia server', ->
 			client1.announcesDice dice.create(2, 1)
 
 			client1.receivesDiceAnnouncement 'client1', dice.create(2, 1)
-
+			client2.receivesDiceAnnouncement 'client1', dice.create(2, 1)
 
 class FakeClient
 	constructor: (@serverPort, @name) ->

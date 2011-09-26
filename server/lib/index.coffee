@@ -1,3 +1,5 @@
 miaServer = require './miaServer'
 
-miaServer.start 9000
+server = miaServer.start 9000
+server.startGame()
+

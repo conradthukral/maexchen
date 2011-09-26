@@ -22,8 +22,7 @@ class RemotePlayer
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "YOUR TURN;#{@currentToken}"
 
-	yourRoll: (dice, announce) ->
-		@announceCallback = announce
+	yourRoll: (dice, @announceCallback) ->
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "ROLLED;#{dice};#{@currentToken}"
 
@@ -73,13 +72,14 @@ class Server
 		@socket.bind port
 		console.log "\nMia server started on port #{port}"
 
+	startGame: ->
+		@game.newRound()
+
 	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
 		if messageCommand == 'REGISTER'
 			name = messageArgs[0]
 			newPlayer = new RemotePlayer name, @socket, fromHost, fromPort, @tokenGenerator
 			@addPlayer fromHost, fromPort, newPlayer
-			@game.registerPlayer newPlayer
-			@game.newRound() # TODO das ist hier keine Gute Idee
 		else
 			@playerFor(fromHost, fromPort).handleMessage messageCommand, messageArgs
 	
@@ -97,6 +97,7 @@ class Server
 	
 	addPlayer: (host, port, player) ->
 		@players["#{host}:#{port}"] = player
+		@game.registerPlayer player
 	
 exports.start = (port, timeout) ->
 	return new Server port, timeout
