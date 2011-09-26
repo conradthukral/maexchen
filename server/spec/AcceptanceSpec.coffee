@@ -91,6 +91,7 @@ describe 'the Mia server', ->
 			client1.receivesRolledDice dice.create(2, 1)
 			client1.announcesDice dice.create(2, 1)
 
+			client1.receivesDiceAnnouncement 'client1', dice.create(2, 1)
 
 
 class FakeClient
@@ -139,6 +140,9 @@ class FakeClient
 	announcesDice: (dice) ->
 		runs =>
 			@send "ANNOUNCE;#{dice};#{@currentToken}"
+
+	receivesDiceAnnouncement: (playerName, dice) ->
+		@receives "ANNOUNCED;#{playerName};#{dice}"
 
 	waitsUntilTimeout: ->
 		waits timeoutForClientAnswers

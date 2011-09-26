@@ -1,6 +1,8 @@
 dgram = require 'dgram'
-miaGame = require './miaGame'
 uuid = require 'node-uuid'
+
+miaGame = require './miaGame'
+dice = require './dice'
 
 String::startsWith = (prefix) ->
 	@substring(0, prefix.length) == prefix
@@ -9,7 +11,7 @@ class UUIDTokenGenerator
 	generate: -> uuid()
 
 class RemotePlayer
-	constructor: (@socket, @host, @port, @tokenGenerator) ->
+	constructor: (@name, @socket, @host, @port, @tokenGenerator) ->
 		@sendMessage 'REGISTERED;0'
 
 	willJoinRound: (@joinCallback) ->
@@ -21,6 +23,7 @@ class RemotePlayer
 		@sendMessage "YOUR TURN;#{@currentToken}"
 
 	yourRoll: (dice, announce) ->
+		@announceCallback = announce
 		@currentToken = @tokenGenerator.generate()
 		@sendMessage "ROLLED;#{dice};#{@currentToken}"
 
@@ -31,6 +34,7 @@ class RemotePlayer
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
 
 	announcedDiceBy: (dice, player) ->
+		@sendMessage "ANNOUNCED;#{player.name};#{dice}"
 
 	playerLost: (player) ->
 
@@ -41,6 +45,9 @@ class RemotePlayer
 					@joinCallback true
 			when 'ROLL'
 				@playerTurnCallback miaGame.Messages.ROLL
+			when 'ANNOUNCE'
+				announcedDice = dice.parse messageArgs[0]
+				@announceCallback announcedDice
 
 	sendMessage: (message) ->
 		console.log "sending '#{message}' to #{@host}:#{@port}"
@@ -68,7 +75,8 @@ class Server
 
 	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
 		if messageCommand == 'REGISTER'
-			newPlayer = new RemotePlayer @socket, fromHost, fromPort, @tokenGenerator
+			name = messageArgs[0]
+			newPlayer = new RemotePlayer name, @socket, fromHost, fromPort, @tokenGenerator
 			@addPlayer fromHost, fromPort, newPlayer
 			@game.registerPlayer newPlayer
 			@game.newRound() # TODO das ist hier keine Gute Idee

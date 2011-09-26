@@ -60,3 +60,9 @@ describe 'dice', ->
 		it 'should be nicely formatted', ->
 			thirtyOne = dice.create 1, 3
 			expect("#{thirtyOne}").toEqual '3,1'
+
+		it 'should parse its own representation', ->
+			thirtyOne = dice.create 1, 3
+			parsed = dice.parse thirtyOne.toString()
+			expect(parsed).toEqual thirtyOne
+

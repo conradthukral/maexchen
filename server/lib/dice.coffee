@@ -28,3 +28,9 @@ class Dice
 exports.create = (die1, die2) ->
 	new Dice(die1, die2)
 
+exports.parse = (string) ->
+	dice = string.split ','
+	die1 = parseInt dice[0]
+	die2 = parseInt dice[1]
+	new Dice die1, die2
+
