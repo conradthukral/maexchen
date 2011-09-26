@@ -19,10 +19,6 @@ describe "remotePlayer", ->
 		player.handleMessage 'JOIN', 'token'
 		expect(mySpy.sendMessage).not.toHaveBeenCalled()
 
-	it 'should send message when registered successfully', ->
-		player.registered()
-		expect(mySpy.sendMessage).toHaveBeenCalledWith 'REGISTERED;0'
-
 	describe 'when asked to join a round', ->
 
 		beforeEach ->
@@ -100,4 +96,20 @@ describe "remotePlayer", ->
 			player.handleMessage 'ANNOUNCE', ['2,1', 'theToken']
 
 			expect(mySpy.callback).not.toHaveBeenCalled()
+
+	describe 'other notifications', ->
+
+		it 'should send ANNOUNCED notifications', ->
+			otherPlayer = name: 'theOtherPlayer'
+			player.announcedDiceBy 'theDice', otherPlayer
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ANNOUNCED;theOtherPlayer;theDice'
+
+		it 'should send ROUND STARTED notifications', ->
+			player.roundStarted()
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTED;testClient:0' # TODO: correct players/scores
+
+		it 'should send message when registered successfully', ->
+			player.registered()
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REGISTERED;0' # TODO: correct score
+
 
