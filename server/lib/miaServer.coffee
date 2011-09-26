@@ -27,7 +27,7 @@ class Server
 	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
 		if messageCommand == 'REGISTER'
 			name = messageArgs[0]
-			newPlayer = remotePlayer.create name, @socket, fromHost, fromPort
+			newPlayer = @createPlayer name, fromHost, fromPort
 			@addPlayer fromHost, fromPort, newPlayer
 		else
 			@playerFor(fromHost, fromPort).handleMessage messageCommand, messageArgs
@@ -45,6 +45,14 @@ class Server
 	addPlayer: (host, port, player) ->
 		@players["#{host}:#{port}"] = player
 		@game.registerPlayer player
+	
+	createPlayer: (name, host, port) ->
+		sendMessageCallback = (message) =>
+			console.log "sending '#{message}' to #{host}:#{port}"
+			buffer = new Buffer(message)
+			@socket.send buffer, 0, buffer.length, port, host
+		remotePlayer.create name, sendMessageCallback
+		
 	
 exports.start = (port, timeout) ->
 	return new Server port, timeout

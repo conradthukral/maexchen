@@ -33,7 +33,7 @@ class WaitingForAnnounceState
 		new InactiveState
 
 class RemotePlayer
-	constructor: (@name, @socket, @host, @port) ->
+	constructor: (@name, @sendMessageCallback) ->
 		@sendMessage 'REGISTERED;0'
 		@currentState = new InactiveState
 
@@ -67,11 +67,8 @@ class RemotePlayer
 		@currentState = @currentState.handleMessage messageCommand, messageArgs
 
 	sendMessage: (message) ->
-		console.log "sending '#{message}' to #{@host}:#{@port}"
-		buffer = new Buffer(message)
-		@socket.send buffer, 0, buffer.length, @port, @host
+		@sendMessageCallback message
 
-
-exports.create = (name, socket, host, port) ->
-	new RemotePlayer(name, socket, host, port)
+exports.create = (name, sendMessageCallback) ->
+	new RemotePlayer(name, sendMessageCallback)
 
