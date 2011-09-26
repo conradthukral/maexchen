@@ -30,6 +30,10 @@ class RemotePlayer
 	roundStarted: ->
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
 
+	announcedDiceBy: (dice, player) ->
+
+	playerLost: (player) ->
+
 	handleMessage: (messageCommand, messageArgs) ->
 		switch messageCommand
 			when 'JOIN'

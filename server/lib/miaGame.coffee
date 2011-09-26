@@ -36,6 +36,7 @@ class MiaGame
 		@stopped = false
 		@actualDice = null
 		@announcedDice = null
+		@currentPlayer = null
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
@@ -70,7 +71,9 @@ class MiaGame
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		expirer = @startExpirer @currentPlayerLoses
+		@currentRound.first (player) => @currentPlayer = player
+
+		expirer = @startExpirer (=> @currentPlayerLoses()), true
 
 		question = expirer.makeExpiring (turn) =>
 			switch turn
@@ -78,13 +81,13 @@ class MiaGame
 				when Messages.SEE then @showDice()
 				else @currentPlayerLoses()
 
-		@currentRound.first (player) =>
+		@currentRound.first (player) ->
 			player.yourTurn question
 
 	rollDice: ->
 		@actualDice = dice = @diceRoller.roll()
 
-		expirer = @startExpirer @currentPlayerLoses
+		expirer = @startExpirer (=> @currentPlayerLoses()), true
 
 		announce = expirer.makeExpiring (announcedDice) =>
 			@announce(announcedDice)
@@ -102,6 +105,8 @@ class MiaGame
 			@currentPlayerLoses()
 
 	broadcastAnnouncedDice: ->
+		@currentRound.each (player) =>
+			player.announcedDiceBy @announcedDice, @currentPlayer
 
 	miaIsAnnounced: ->
 		if @actualDice.isMia()
@@ -121,13 +126,16 @@ class MiaGame
 	broadcastActualDice: ->
 		
 	currentPlayerLoses: ->
+		@currentRound.each (player) =>
+			player.playerLost @currentPlayer
 
 	lastPlayerLoses: ->
 
-	startExpirer: (onExpireAction) ->
+	startExpirer: (onExpireAction, cancelExpireAction = false) ->
 		expireCallback.startExpirer
 			timeout: @broadcastTimeout
-			onExpire: onExpireAction
+			onExpire: onExpireAction ? ->
+			cancelExpireAction: cancelExpireAction
 
 exports.createGame = -> new MiaGame
 

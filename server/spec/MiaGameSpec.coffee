@@ -4,12 +4,14 @@ class PlayerStub
 	roundStarted: ->
 	yourTurn: ->
 	yourRoll: ->
+	announcedDiceBy: ->
+	playerLost: ->
 
 mia = require '../lib/miaGame'
 dice = require '../lib/dice'
 
 describe 'Mia Game', ->
-	miaGame = player1 = player2 = null
+	miaGame = player1 = player2 = player3 = registerPlayers = null
 	accept = (question) -> question(true)
 	deny = (question) -> question(false)
 	roll = (question) -> question(mia.Messages.ROLL)
@@ -18,15 +20,21 @@ describe 'Mia Game', ->
 
 	beforeEach ->
 		miaGame = mia.createGame()
+		players = [new PlayerStub, new PlayerStub, new PlayerStub]
+		player1 = players[0]
+		player2 = players[1]
+		player3 = players[2]
 		this.addMatchers
 			toHavePlayer: (player) -> this.actual.hasPlayer player
+
+		registerPlayers = (numbers...) ->
+			for number in numbers
+				miaGame.registerPlayer players[number - 1]
 
 	afterEach ->
 		miaGame.stop()
 
 	it 'accepts players to register', ->
-		player1 = {}
-		player2 = {}
 		expect(miaGame.players).not.toHavePlayer player1
 		miaGame.registerPlayer player1
 
@@ -44,8 +52,7 @@ describe 'Mia Game', ->
 	describe 'new round', ->
 
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
+			registerPlayers 1, 2
 
 		it 'should broadcast new round', ->
 			spyOn player1, 'willJoinRound'
@@ -182,11 +189,18 @@ describe 'Mia Game', ->
 
 	describe 'next turn', ->
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
+			registerPlayers 1, 2
 			miaGame.currentRound.add player1
 			miaGame.currentRound.add player2
 			miaGame.setBroadcastTimeout 20
+
+		it 'should set the first player in round as currentPlayer', ->
+			expect(miaGame.currentPlayer).toBeNull()
+			runs ->
+				miaGame.nextTurn()
+			waits 10
+			runs ->
+				expect(miaGame.currentPlayer).toBe player1
 
 		it 'should tell the first player in round that it is her turn', ->
 			spyOn player1, 'yourTurn'
@@ -244,7 +258,7 @@ describe 'Mia Game', ->
 			roll: -> 'theDice'
 
 		beforeEach ->
-			miaGame.registerPlayer player1 = new PlayerStub
+			miaGame.registerPlayer player1
 			miaGame.currentRound.add player1
 			miaGame.setDiceRoller diceRoller
 			miaGame.setBroadcastTimeout 20
@@ -359,6 +373,49 @@ describe 'Mia Game', ->
 			miaGame.showDice()
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
+
+	describe 'broadcast announced dice', ->
+		beforeEach ->
+			registerPlayers 1, 2, 3
+			miaGame.currentRound.add player2
+			miaGame.currentRound.add player3
+			
+		it 'should tell everybody in current round about the announced dice', ->
+			spyOn player1, 'announcedDiceBy'
+			spyOn player2, 'announcedDiceBy'
+			spyOn player3, 'announcedDiceBy'
+			runs ->
+				miaGame.announcedDice = 'theDice'
+				miaGame.currentPlayer = player2
+				miaGame.broadcastAnnouncedDice()
+			waitsFor (-> player2.announcedDiceBy.wasCalled), 10
+			runs ->
+				expect(player2.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
+				expect(player3.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
+				expect(player1.announcedDiceBy).not.toHaveBeenCalled()
+
+	describe 'current player loses', ->
+		beforeEach ->
+			registerPlayers 1, 2, 3
+			miaGame.currentRound.add player2
+			miaGame.currentRound.add player3
+
+		it 'should broadcast player lost to everyone in the round', ->
+			spyOn player1, 'playerLost'
+			spyOn player2, 'playerLost'
+			spyOn player3, 'playerLost'
+			runs ->
+				miaGame.currentPlayer = player2
+				miaGame.currentPlayerLoses()
+			waitsFor (-> player2.playerLost.wasCalled), 10
+			runs ->
+				expect(player2.playerLost).toHaveBeenCalledWith player2
+				expect(player3.playerLost).toHaveBeenCalledWith player2
+				expect(player1.playerLost).not.toHaveBeenCalled()
+
+#	describe 'broadcast mia', ->
+#		it 'should announce that the following player loses', ->
+			
 
 describe 'permutation', ->
 	list1 = list2 = {}
