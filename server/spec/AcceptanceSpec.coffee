@@ -62,7 +62,6 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			keepServerFromPermutingThePlayers()
-#			server.setDiceRoller new FakeDiceRoller dice.create(6, 6)
 			server.rolls = (die1, die2) ->
 				@setDiceRoller new FakeDiceRoller dice.create(die1, die2)
 			client1 = setupFakeClient 'client1'
