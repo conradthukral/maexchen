@@ -88,8 +88,13 @@ describe 'the Mia server', ->
 			client1.receivesDiceAnnouncement 'client1', dice.create(6, 6)
 			client2.receivesDiceAnnouncement 'client1', dice.create(6, 6)
 
-			#client2.isAskedToPlayATurn()
-			#client2.wantsToSee()
+			client2.isAskedToPlayATurn()
+			client2.wantsToSee()
+
+			client1.receivesActualDice dice.create(6, 6)
+			client2.receivesActualDice dice.create(6, 6)
+			client1.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
+			client2.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
 
 class FakeClient
 	constructor: (@serverPort, @name) ->
@@ -144,6 +149,12 @@ class FakeClient
 
 	receivesDiceAnnouncement: (playerName, dice) ->
 		@receives "ANNOUNCED;#{playerName};#{dice}"
+
+	receivesActualDice: (dice) ->
+		@receives "ACTUAL DICE;#{dice}"
+	
+	receivesNotificationThatPlayerLost: (playerName, reason) ->
+		@receives "PLAYER LOST;#{playerName};#{reason}"
 
 	receivesWithAppendedToken: (expectedMessage) ->
 		regex = new RegExp "#{expectedMessage};([^;]*)", 'g'

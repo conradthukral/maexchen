@@ -110,6 +110,8 @@ class MiaGame
 			@announcedDice = dice
 			if dice.isMia()
 				@miaIsAnnounced()
+			else
+				@nextTurn()
 		else
 			@currentPlayerLoses 'announced losing dice'
 
@@ -135,6 +137,8 @@ class MiaGame
 			@lastPlayerLoses 'was caught bluffing'
 
 	broadcastActualDice: ->
+		@currentRound.each (player) =>
+			player.actualDice @actualDice
 		
 	currentPlayerLoses: (reason) ->
 		@currentRound.each (player) =>

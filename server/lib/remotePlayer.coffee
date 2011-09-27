@@ -72,7 +72,11 @@ class RemotePlayer
 	announcedDiceBy: (dice, player) ->
 		@sendMessage "ANNOUNCED;#{player.name};#{dice}"
 
-	playerLost: (player) ->
+	actualDice: (dice) ->
+		@sendMessage "ACTUAL DICE;#{dice}"
+
+	playerLost: (player, reason) ->
+		@sendMessage "PLAYER LOST;#{player.name};#{reason}"
 
 	handleMessage: (messageCommand, messageArgs) ->
 		@currentState.handleMessage messageCommand, messageArgs

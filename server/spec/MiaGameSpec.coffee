@@ -6,6 +6,7 @@ class PlayerStub
 	yourTurn: ->
 	yourRoll: ->
 	announcedDiceBy: ->
+	actualDice: ->
 	playerLost: ->
 
 mia = require '../lib/miaGame'
@@ -319,7 +320,12 @@ describe 'Mia Game', ->
 		it 'should broadcast the announced roll, when she announces validly', ->
 			spyOn miaGame, 'broadcastAnnouncedDice'
 			miaGame.announce(dice.create 3, 3)
-			expect(miaGame.broadcastAnnouncedDice).toHaveBeenCalled()
+			expect(miaGame.broadcastAnnouncedDice).toHaveBeenCalledWith dice.create(3, 3)
+
+		it 'should call next turn when she announces validly', ->
+			spyOn miaGame, 'nextTurn'
+			miaGame.announce(dice.create 3, 3)
+			expect(miaGame.nextTurn).toHaveBeenCalled()
 
 		it 'should broadcast mia, when she announces mia correctly', ->
 			spyOn miaGame, 'broadcastMia'
@@ -362,7 +368,7 @@ describe 'Mia Game', ->
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'saw that the announcement was true'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
 
-	describe 'broadcast announced dice', ->
+	describe 'broadcast dice', ->
 		beforeEach ->
 			registerPlayers 1, 2, 3
 			miaGame.currentRound.add player2
@@ -377,6 +383,16 @@ describe 'Mia Game', ->
 			expect(player2.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
 			expect(player3.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
 			expect(player1.announcedDiceBy).not.toHaveBeenCalled()
+
+		it 'should tell everybody in current round about the actual dice', ->
+			spyOn player1, 'actualDice'
+			spyOn player2, 'actualDice'
+			spyOn player3, 'actualDice'
+			miaGame.actualDice = 'theDice'
+			miaGame.broadcastActualDice()
+			expect(player2.actualDice).toHaveBeenCalledWith 'theDice'
+			expect(player3.actualDice).toHaveBeenCalledWith 'theDice'
+			expect(player1.actualDice).not.toHaveBeenCalled()
 
 	describe 'current player loses', ->
 		beforeEach ->

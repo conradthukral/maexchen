@@ -6,7 +6,6 @@ Grundlagen
 
 TODOs
 =====
-- Zeilenumbrüche?!
 - allgemeines Timeout?
 - zufällige reihenfolge beschreiben
 - einschränkungen für spielernamen aus dem protokoll ableiten
@@ -22,6 +21,8 @@ Anmelden
   - server->client: REGISTERED;punktestand
 - Ansonsten:
   server->client: REJECTED
+
+(TODO: passwort weg, dafür IP-vergleich einbauen)
   
 Start einer Spielrunde
 -----------------------
@@ -32,6 +33,8 @@ Falls mindestens ein Spieler teilnehmen will:
 - server->clients: ROUND STARTED;spielerinfos*
   wobei spielerinfos mehrfach vorkommen kann und die folgende Form hat:
   name:punktestand
+
+(TODO: Punktestand in separate Nachricht am Ende einer Runde verlegen)
   
 Ansonsten:
 - server->clients: ROUND CANCELED;no players
@@ -52,8 +55,8 @@ Bei ROLL:
 Bei SEE:
 Server überprüft, ob zuletzt angesagte Würfel okay sind
 - server->clients: ACTUAL DICE;dice
-- server->clients: PLAYER LOST;name
+- server->clients: PLAYER LOST;name;reason
 
 Wann immer ein Spieler nicht rechtzeitig antwortet oder sonst etwas falsch macht:
-- server->clients: PLAYER LOST;name
+- server->clients: PLAYER LOST;name;reason
 
