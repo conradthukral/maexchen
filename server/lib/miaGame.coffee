@@ -23,7 +23,7 @@ class PlayerList
 	each: (fn) -> for player in @players
 		# "do" makes sure, that player is used with the current value
 		# not the last player from the loop
-		do (player) -> 
+		do (player) ->
 			# call non-blocking
 			setTimeout (-> fn player), 0
 
@@ -47,6 +47,7 @@ class MiaGame
 		return if @stopped
 		@currentRound = round = new PlayerList
 		expirer = @startExpirer =>
+			return if @stopped
 			if round.isEmpty()
 				@players.each (player) ->
 					player.roundCanceled 'no players'
@@ -57,7 +58,9 @@ class MiaGame
 		@players.each (player) => # "=>" binds this to MiaGame
 			answerJoining = (join) =>
 				round.add player if join
-				@startRound() if round.size() == @players.size()
+				if round.size() == @players.size()
+					expirer.cancelExpireActions()
+					@startRound()
 			player.willJoinRound expirer.makeExpiring(answerJoining)
 
 	startRound: ->

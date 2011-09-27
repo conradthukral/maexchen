@@ -1,5 +1,5 @@
 expireCallback = require '../lib/expireCallback'
-expireCallback.setDefaultTimeout 10
+expireCallback.setDefaultTimeout 5
 
 mySpy = null
 
@@ -28,8 +28,8 @@ describe 'The Expirer', ->
 		runs ->
 			expirer = expireCallback.startExpirer()
 			callExpiring = expirer.makeExpiring(mySpy.callMe)
-			setTimeout callExpiring, 20
-		waits 30
+			setTimeout callExpiring, 10
+		waits 20
 		runs ->
 			expect(mySpy.callMe).not.toHaveBeenCalled()
 
@@ -45,7 +45,7 @@ describe 'The Expirer', ->
 		runs ->
 			expect(mySpy.callMe).toHaveBeenCalled()
 
-	it 'should not call the onExpire when cancelExpireAction is true and callback was called', ->
+	it 'should not call onExpire when cancelExpireAction is true and callback was called', ->
 		runs ->
 			expirer = expireCallback.startExpirer
 				onExpire: mySpy.callMe
@@ -57,7 +57,7 @@ describe 'The Expirer', ->
 		runs ->
 			expect(mySpy.callMe).not.toHaveBeenCalled()
 
-	it 'should call the onExpire when cancelExpireAction is true and callback was not called', ->
+	it 'should call onExpire when cancelExpireAction is true and callback was not called', ->
 		runs ->
 			expirer = expireCallback.startExpirer
 				onExpire: mySpy.callMe
@@ -68,3 +68,12 @@ describe 'The Expirer', ->
 		runs ->
 			expect(mySpy.callMe).toHaveBeenCalled()
 
+	it 'should not call onExpire when cancelExpireActions was called', ->
+		runs ->
+			expirer = expireCallback.startExpirer
+				onExpire: mySpy.callMe
+			expirer.makeExpiring(->)
+			expirer.cancelExpireActions()
+		waits 20
+		runs ->
+			expect(mySpy.callMe).not.toHaveBeenCalled()
