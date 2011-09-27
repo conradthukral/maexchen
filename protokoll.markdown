@@ -30,12 +30,9 @@ Start einer Spielrunde
 - client->server: JOIN;token
 
 Falls mindestens ein Spieler teilnehmen will:
-- server->clients: ROUND STARTED;spielerinfos*
-  wobei spielerinfos mehrfach vorkommen kann und die folgende Form hat:
-  name:punktestand
+- server->clients: ROUND STARTED;spielernamen
+  wobei spielernamen eine kommagetrennte List der Mitspieler ist (in der Reihenfolge, in der diese Runde gespielt wird)
 
-(TODO: Punktestand in separate Nachricht am Ende einer Runde verlegen)
-  
 Ansonsten:
 - server->clients: ROUND CANCELED;no players
   woraufhin eine neue Runde gestartet wird.
@@ -59,4 +56,8 @@ Server überprüft, ob zuletzt angesagte Würfel okay sind
 
 Wann immer ein Spieler nicht rechtzeitig antwortet oder sonst etwas falsch macht:
 - server->clients: PLAYER LOST;name;reason
+
+Nach Ende einer Runde:
+- server->clients: SCORE;spielerpunkte*
+  wobei spielerpunkte eine kommagetrennte Liste von Einträgen in der Form name:punkte ist und für jeden Spieler einen Eintrag enthält
 

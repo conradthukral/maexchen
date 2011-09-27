@@ -66,8 +66,9 @@ class RemotePlayer
 		@changeState new InactiveState
 		@sendMessage "ROUND CANCELED;#{reason}"
 
-	roundStarted: ->
-		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
+	roundStarted: (players) ->
+		playersString = (player.name for player in players).join()
+		@sendMessage "ROUND STARTED;#{playersString}"
 
 	announcedDiceBy: (dice, player) ->
 		@sendMessage "ANNOUNCED;#{player.name};#{dice}"
@@ -77,6 +78,10 @@ class RemotePlayer
 
 	playerLost: (player, reason) ->
 		@sendMessage "PLAYER LOST;#{player.name};#{reason}"
+
+	currentScore: (scores) ->
+		scoreString = ("#{name}:#{score}" for name, score of scores).join()
+		@sendMessage "SCORE;#{scoreString}"
 
 	handleMessage: (messageCommand, messageArgs) ->
 		@currentState.handleMessage messageCommand, messageArgs

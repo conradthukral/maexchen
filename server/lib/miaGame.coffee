@@ -43,6 +43,7 @@ class MiaGame
 		@actualDice = null
 		@announcedDice = null
 		@currentPlayer = null
+		@score = require('./score').create()
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
@@ -73,8 +74,9 @@ class MiaGame
 		@permuteCurrentRound()
 		@actualDice = null
 		@announcedDice = null
-		@currentRound.each (player) ->
-			player.roundStarted()
+		@currentRound.each (player) =>
+			@score.increaseFor player
+			player.roundStarted @currentRound.players
 		@nextTurn()
 
 	permuteCurrentRound: -> @currentRound.permute()
@@ -94,6 +96,7 @@ class MiaGame
 		@currentPlayer.yourTurn question
 
 	rollDice: ->
+		return if @stopped
 		@actualDice = dice = @diceRoller.roll()
 
 		expirer = @startExpirer (=> @currentPlayerLoses 'failed to announce dice'), true
@@ -105,6 +108,7 @@ class MiaGame
 			player.yourRoll dice, announce
 
 	announce: (dice) ->
+		return if @stopped
 		@broadcastAnnouncedDice dice
 		if not @announcedDice? or dice.isHigherThan @announcedDice
 			@announcedDice = dice
@@ -128,6 +132,7 @@ class MiaGame
 	broadcastMia: ->
 
 	showDice: ->
+		return if @stopped
 		@broadcastActualDice()
 		if not @actualDice?
 			@currentPlayerLoses 'wanted to see dice before the first roll'
@@ -141,10 +146,18 @@ class MiaGame
 			player.actualDice @actualDice
 		
 	currentPlayerLoses: (reason) ->
+		return if @stopped
+		@score.decreaseFor @currentPlayer
 		@currentRound.each (player) =>
 			player.playerLost @currentPlayer, reason
+		@broadcastScore()
 
 	lastPlayerLoses: (reason) ->
+
+	broadcastScore: ->
+		allScores = @score.all()
+		@players.each (player) =>
+			player.currentScore allScores
 
 	startExpirer: (onExpireAction, cancelExpireAction = false) ->
 		expireCallback.startExpirer

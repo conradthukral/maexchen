@@ -77,8 +77,8 @@ describe 'the Mia server', ->
 			client2.receivesOfferToJoinRound()
 			client2.joinsRound()
 
-			client1.receivesNotificationThatRoundIsStarting()
-			client2.receivesNotificationThatRoundIsStarting()
+			client1.receivesNotificationThatRoundIsStarting 'client1', 'client2'
+			client2.receivesNotificationThatRoundIsStarting 'client1', 'client2'
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
@@ -95,6 +95,9 @@ describe 'the Mia server', ->
 			client2.receivesActualDice dice.create(6, 6)
 			client1.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
 			client2.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
+
+			client1.receivesScores client1: 1, client2: 0
+			client2.receivesScores client1: 1, client2: 0
 
 class FakeClient
 	constructor: (@serverPort, @name) ->
@@ -126,8 +129,8 @@ class FakeClient
 	receivesNotificationThatNobodyWantedToJoin: ->
 		@receives 'ROUND CANCELED;no players'
 
-	receivesNotificationThatRoundIsStarting: ->
-		@receives 'ROUND STARTED;testClient:0' #FIXME this is wrong now
+	receivesNotificationThatRoundIsStarting: (playernames...) ->
+		@receives "ROUND STARTED;#{playernames.join()}"
 
 	isAskedToPlayATurn: ->
 		@receivesWithAppendedToken 'YOUR TURN'
@@ -155,6 +158,10 @@ class FakeClient
 	
 	receivesNotificationThatPlayerLost: (playerName, reason) ->
 		@receives "PLAYER LOST;#{playerName};#{reason}"
+
+	receivesScores: (scores) ->
+		scoresString = ("#{name}:#{score}" for name, score of scores).join()
+		@receives "SCORE;#{scoresString}"
 
 	receivesWithAppendedToken: (expectedMessage) ->
 		regex = new RegExp "#{expectedMessage};([^;]*)", 'g'

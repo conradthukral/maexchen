@@ -105,8 +105,11 @@ describe "remotePlayer", ->
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ANNOUNCED;theOtherPlayer;theDice'
 
 		it 'should send ROUND STARTED notifications', ->
-			player.roundStarted()
-			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTED;testClient:0' # TODO: correct players/scores
+			player1 = name: 'player1'
+			player2 = name: 'player2'
+			player.roundStarted [player1, player2]
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTED;player1,player2'
+
 		it 'should send ACTUAL DICE notifications', ->
 			player.actualDice dice.create(3, 2)
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ACTUAL DICE;3,2'
@@ -115,6 +118,11 @@ describe "remotePlayer", ->
 			losingPlayer = name: 'theLosingPlayer'
 			player.playerLost losingPlayer, 'theReason'
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'PLAYER LOST;theLosingPlayer;theReason'
+
+		it 'should send SCORE notifications', ->
+			scores = player1: 23, player2: 42
+			player.currentScore scores
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'SCORE;player1:23,player2:42'
 
 		it 'should send message when registered successfully', ->
 			player.registered()

@@ -8,6 +8,7 @@ class PlayerStub
 	announcedDiceBy: ->
 	actualDice: ->
 	playerLost: ->
+	currentScore: ->
 
 mia = require '../lib/miaGame'
 dice = require '../lib/dice'
@@ -147,6 +148,17 @@ describe 'Mia Game', ->
 			runs ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 				expect(miaGame.newRound.callCount).toBe 2
+		
+		it 'should not start a round after the game is stopped', ->
+			spyOn miaGame, 'startRound'
+			miaGame.setBroadcastTimeout 20
+			player1.willJoinRound = accept
+			runs ->
+				miaGame.newRound()
+				miaGame.stop()
+			waits 30
+			runs ->
+				expect(miaGame.startRound).not.toHaveBeenCalled()
 
 	describe 'start round', ->
 
@@ -156,16 +168,16 @@ describe 'Mia Game', ->
 			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
 
 		it 'should notify players when starting a new round', ->
-			miaGame.registerPlayer player1 = new PlayerStub
-			miaGame.registerPlayer player2 = new PlayerStub
+			miaGame.permuteCurrentRound = ->
+			registerPlayers 1, 2
 			spyOn player1, 'roundStarted'
 			spyOn player2, 'roundStarted'
-			player1.willJoinRound = accept
-			player2.willJoinRound = accept
-			miaGame.newRound()
+			miaGame.currentRound.add player1
+			miaGame.currentRound.add player2
+			miaGame.startRound()
 			
-			expect(player1.roundStarted).toHaveBeenCalled()
-			expect(player2.roundStarted).toHaveBeenCalled()
+			expect(player1.roundStarted).toHaveBeenCalledWith [player1, player2]
+			expect(player2.roundStarted).toHaveBeenCalledWith [player1, player2]
 
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'
@@ -181,6 +193,15 @@ describe 'Mia Game', ->
 			miaGame.announcedDice = 'x'
 			miaGame.startRound()
 			expect(miaGame.announcedDice).toBeNull()
+
+		it 'should award all participating players a point', ->
+			registerPlayers 1, 2
+			spyOn miaGame.score, 'increaseFor'
+			miaGame.currentRound.add player1
+			miaGame.startRound()
+			
+			expect(miaGame.score.increaseFor).toHaveBeenCalledWith player1
+			expect(miaGame.score.increaseFor).not.toHaveBeenCalledWith player2
 
 	describe 'next turn', ->
 		beforeEach ->
@@ -257,6 +278,7 @@ describe 'Mia Game', ->
 			miaGame.currentRound.add player1
 			miaGame.setDiceRoller diceRoller
 			miaGame.setBroadcastTimeout 20
+			spyOn miaGame, 'currentPlayerLoses'
 
 		it 'should inform the player about their roll', ->
 			spyOn player1, 'yourRoll'
@@ -276,7 +298,6 @@ describe 'Mia Game', ->
 
 		it 'should make the player lose, when she does not announce within time', ->
 			spyOn miaGame, 'announce'
-			spyOn miaGame, 'currentPlayerLoses'
 			runs ->
 				player1.yourRoll = (dice, announce) -> setTimeout announce, 30
 				miaGame.rollDice()
@@ -285,7 +306,6 @@ describe 'Mia Game', ->
 				expect(miaGame.announce).not.toHaveBeenCalled()
 
 		it 'should make the player lose, when she does not announce', ->
-			spyOn miaGame, 'currentPlayerLoses'
 			runs ->
 				player1.yourRoll = (dice, announce) ->
 				miaGame.rollDice()
@@ -293,7 +313,17 @@ describe 'Mia Game', ->
 			runs ->
 				expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'failed to announce dice'
 
-	describe 'annouce', ->
+		it 'should do nothing if the game is stopped', ->
+			spyOn player1, 'yourRoll'
+			miaGame.stop()
+			miaGame.rollDice()
+			expect(player1.yourRoll).not.toHaveBeenCalled()
+
+	describe 'announce', ->
+
+		beforeEach ->
+			spyOn miaGame, 'currentPlayerLoses'
+
 		it 'should store the announced roll, when she announces higher', ->
 			miaGame.announcedDice = dice.create 2, 2
 			someDice = dice.create 3, 3
@@ -306,7 +336,6 @@ describe 'Mia Game', ->
 			expect(miaGame.announcedDice).toBe someDice
 
 		it 'should make the player lose, when she does not announce higher', ->
-			spyOn miaGame, 'currentPlayerLoses'
 			miaGame.announcedDice = dice.create 3, 3
 			miaGame.announce(dice.create 2, 2)
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'announced losing dice'
@@ -334,10 +363,15 @@ describe 'Mia Game', ->
 			expect(miaGame.broadcastMia).toHaveBeenCalled()
 
 		it 'should make player lose, when she announces mia wrongly', ->
-			spyOn miaGame, 'currentPlayerLoses'
 			miaGame.actualDice = dice.create 2, 2
 			miaGame.announce(dice.create 1, 2)
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wrongly announced mia'
+
+		it 'should do nothing if the game is stopped', ->
+			spyOn miaGame, 'nextTurn'
+			miaGame.stop()
+			miaGame.announce(dice.create 3, 3)
+			expect(miaGame.nextTurn).not.toHaveBeenCalled()
 
 	describe 'when player wants to see', ->
 		beforeEach ->
@@ -367,6 +401,12 @@ describe 'Mia Game', ->
 			miaGame.showDice()
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'saw that the announcement was true'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
+
+		it 'should do nothing if game is stopped', ->
+			spyOn miaGame, 'broadcastActualDice'
+			miaGame.stop()
+			miaGame.showDice()
+			expect(miaGame.broadcastActualDice).not.toHaveBeenCalled()
 
 	describe 'broadcast dice', ->
 		beforeEach ->
@@ -400,6 +440,13 @@ describe 'Mia Game', ->
 			miaGame.currentRound.add player2
 			miaGame.currentRound.add player3
 
+		it 'should decrease the score', ->
+			spyOn miaGame.score, 'decreaseFor'
+			miaGame.currentPlayer = player2
+			miaGame.currentPlayerLoses 'theReason'
+			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player2
+			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player3
+
 		it 'should broadcast player lost to everyone in the round', ->
 			spyOn player1, 'playerLost'
 			spyOn player2, 'playerLost'
@@ -409,6 +456,33 @@ describe 'Mia Game', ->
 			expect(player2.playerLost).toHaveBeenCalledWith player2, 'theReason'
 			expect(player3.playerLost).toHaveBeenCalledWith player2, 'theReason'
 			expect(player1.playerLost).not.toHaveBeenCalled()
+
+		it 'should do nothing if game is stopped', ->
+			spyOn player2, 'playerLost'
+			miaGame.currentPlayer = player2
+			miaGame.stop()
+			miaGame.currentPlayerLoses 'aReason'
+			expect(player2.playerLost).not.toHaveBeenCalled()
+
+		it 'should broadcast the score of all players to all players', ->
+			spyOn miaGame, 'broadcastScore'
+			miaGame.currentPlayer = player2
+			miaGame.currentPlayerLoses 'aReason'
+			expect(miaGame.broadcastScore).toHaveBeenCalled()
+
+	describe 'broadcast score', ->
+
+		beforeEach ->
+			registerPlayers 1, 2
+
+		it 'should send the current score to all players', ->
+			spyOn player1, 'currentScore'
+			spyOn player2, 'currentScore'
+			miaGame.score.all = () -> 'theScore'
+			miaGame.currentRound.add player1
+			miaGame.broadcastScore()
+			expect(player1.currentScore).toHaveBeenCalledWith 'theScore'
+			expect(player2.currentScore).toHaveBeenCalledWith 'theScore'
 
 #	describe 'broadcast mia', ->
 #		it 'should announce that the following player loses', ->
