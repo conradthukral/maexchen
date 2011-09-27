@@ -143,11 +143,11 @@ class MiaGame
 		@currentRound.each (player) =>
 			player.actualDice @actualDice
 		
-	currentPlayerLoses: (reason) -> @playerLoses reason, @currentPlayer
+	currentPlayerLoses: (reason) -> @playerLoses @currentPlayer, reason
 
-	lastPlayerLoses: (reason) -> @playerLoses reason, @lastPlayer
+	lastPlayerLoses: (reason) -> @playerLoses @lastPlayer, reason
 
-	playerLoses: (reason, losingPlayer) ->
+	playerLoses: (losingPlayer, reason) ->
 		return if @stopped
 		@score.decreaseFor losingPlayer
 		@currentRound.each (player) =>
