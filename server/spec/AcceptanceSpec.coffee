@@ -62,7 +62,9 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			keepServerFromPermutingThePlayers()
-			server.setDiceRoller new FakeDiceRoller dice.create(6, 6)
+#			server.setDiceRoller new FakeDiceRoller dice.create(6, 6)
+			server.rolls = (die1, die2) ->
+				@setDiceRoller new FakeDiceRoller dice.create(die1, die2)
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
 			eachPlayer = new MultipleClients [client1, client2]
@@ -79,6 +81,7 @@ describe 'the Mia server', ->
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
+			server.rolls 6, 6
 			client1.receivesRolledDice dice.create(6, 6)
 			client1.announcesDice dice.create(6, 6)
 
@@ -90,6 +93,38 @@ describe 'the Mia server', ->
 			eachPlayer.receivesActualDice dice.create(6, 6)
 			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
 			eachPlayer.receivesScores client1: 1, client2: 0
+
+		it 'should make client1 lose, because she wants to see before the first roll', ->
+			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.joinsRound()
+			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
+			
+			client1.isAskedToPlayATurn()
+			client1.wantsToSee()
+			
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wanted to see dice before the first roll'
+			eachPlayer.receivesScores client1: 0, client2: 1
+
+		it 'should make client1 lose, because she announced incorrectly', ->
+			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.joinsRound()
+			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
+			
+			client1.isAskedToPlayATurn()
+			client1.rolls()
+			server.rolls 4, 4
+			client1.receivesRolledDice dice.create(4, 4)
+			client1.announcesDice dice.create(6, 6)
+
+			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(6, 6)
+
+			client2.isAskedToPlayATurn()
+			client2.wantsToSee()
+
+			eachPlayer.receivesActualDice dice.create(4, 4)
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'was caught bluffing'
+			eachPlayer.receivesScores client1: 0, client2: 1
+
 
 class MultipleClients
 	constructor: (clients) ->

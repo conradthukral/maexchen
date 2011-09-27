@@ -29,9 +29,11 @@ class PlayerList
 	nextPlayer: () ->
 		if @currentPlayer? and @currentPlayer < @size() - 1
 			++@currentPlayer
+			@lastPlayer = @currentPlayer - 1
 		else
 			@currentPlayer = 0
-		@players[@currentPlayer]
+			@lastPlayer = @size() - 1
+		[@players[@currentPlayer], @players[@lastPlayer]]
 
 class MiaGame
 	constructor: ->
@@ -43,6 +45,7 @@ class MiaGame
 		@actualDice = null
 		@announcedDice = null
 		@currentPlayer = null
+		@lastPlayer = null
 		@score = require('./score').create()
 
 	registerPlayer: (player) -> @players.add player
@@ -82,7 +85,7 @@ class MiaGame
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		@currentPlayer = @currentRound.nextPlayer()
+		[@currentPlayer, @lastPlayer] = @currentRound.nextPlayer()
 		return unless @currentPlayer
 
 		expirer = @startExpirer (=> @currentPlayerLoses 'failed to take a turn'), true
@@ -144,14 +147,16 @@ class MiaGame
 		@currentRound.each (player) =>
 			player.actualDice @actualDice
 		
-	currentPlayerLoses: (reason) ->
-		return if @stopped
-		@score.decreaseFor @currentPlayer
-		@currentRound.each (player) =>
-			player.playerLost @currentPlayer, reason
-		@broadcastScore()
+	currentPlayerLoses: (reason) -> @playerLoses reason, @currentPlayer
 
-	lastPlayerLoses: (reason) ->
+	lastPlayerLoses: (reason) -> @playerLoses reason, @lastPlayer
+
+	playerLoses: (reason, losingPlayer) ->
+		return if @stopped
+		@score.decreaseFor losingPlayer
+		@currentRound.each (player) =>
+			player.playerLost losingPlayer, reason
+		@broadcastScore()
 
 	broadcastScore: ->
 		allScores = @score.all()
