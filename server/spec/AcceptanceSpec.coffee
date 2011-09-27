@@ -51,18 +51,7 @@ describe 'the Mia server', ->
 			
 			client.receivesOfferToJoinRound()
 	
-		it 'should silently ignore a player who tries to join with the wrong token', ->
-			client.receivesOfferToJoinRound()
-			client.joinsRoundWithToken 'wrongToken'
-			client.receivesNotificationThatNobodyWantedToJoin()
-
-		it 'should start a round when a player joins', ->
-			client.receivesOfferToJoinRound()
-			client.joinsRound()
-
-			client.receivesNotificationThatRoundIsStarting()
-
-	describe 'with (hopefully soon two) registered players', ->
+	describe 'with two registered players', ->
 
 		client1 = null
 		client2 = null
@@ -72,7 +61,7 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			keepServerFromPermutingThePlayers()
-			server.setDiceRoller new FakeDiceRoller dice.create(2, 1)
+			server.setDiceRoller new FakeDiceRoller dice.create(6, 6)
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
 			runs -> server.startGame()
@@ -81,7 +70,7 @@ describe 'the Mia server', ->
 			client1.shutDown()
 			client2.shutDown()
 
-		it 'should play a round when (hopefully soon) both players join', =>
+		it 'should play a round', =>
 			client1.receivesOfferToJoinRound()
 			client1.joinsRound()
 
@@ -92,13 +81,15 @@ describe 'the Mia server', ->
 			client2.receivesNotificationThatRoundIsStarting()
 			
 			client1.isAskedToPlayATurn()
-
 			client1.rolls()
-			client1.receivesRolledDice dice.create(2, 1)
-			client1.announcesDice dice.create(2, 1)
+			client1.receivesRolledDice dice.create(6, 6)
+			client1.announcesDice dice.create(6, 6)
 
-			client1.receivesDiceAnnouncement 'client1', dice.create(2, 1)
-			client2.receivesDiceAnnouncement 'client1', dice.create(2, 1)
+			client1.receivesDiceAnnouncement 'client1', dice.create(6, 6)
+			client2.receivesDiceAnnouncement 'client1', dice.create(6, 6)
+
+			#client2.isAskedToPlayATurn()
+			#client2.wantsToSee()
 
 class FakeClient
 	constructor: (@serverPort, @name) ->
@@ -139,6 +130,10 @@ class FakeClient
 	rolls: ->
 		runs =>
 			@send "ROLL;#{@currentToken}"
+
+	wantsToSee: ->
+		runs =>
+			@send "SEE;#{@currentToken}"
 
 	receivesRolledDice: (dice) ->
 		@receivesWithAppendedToken "ROLLED;#{dice.die1},#{dice.die2}"
