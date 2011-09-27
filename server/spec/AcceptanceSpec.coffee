@@ -55,6 +55,7 @@ describe 'the Mia server', ->
 
 		client1 = null
 		client2 = null
+		eachPlayer = null
 
 		keepServerFromPermutingThePlayers = ->
 			server.game.permuteCurrentRound = ->
@@ -64,6 +65,7 @@ describe 'the Mia server', ->
 			server.setDiceRoller new FakeDiceRoller dice.create(6, 6)
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
+			eachPlayer = new MultipleClients [client1, client2]
 			runs -> server.startGame()
 
 		afterEach ->
@@ -71,34 +73,35 @@ describe 'the Mia server', ->
 			client2.shutDown()
 
 		it 'should play a round', =>
-			client1.receivesOfferToJoinRound()
-			client1.joinsRound()
-
-			client2.receivesOfferToJoinRound()
-			client2.joinsRound()
-
-			client1.receivesNotificationThatRoundIsStarting 'client1', 'client2'
-			client2.receivesNotificationThatRoundIsStarting 'client1', 'client2'
+			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.joinsRound()
+			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
 			client1.receivesRolledDice dice.create(6, 6)
 			client1.announcesDice dice.create(6, 6)
 
-			client1.receivesDiceAnnouncement 'client1', dice.create(6, 6)
-			client2.receivesDiceAnnouncement 'client1', dice.create(6, 6)
+			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(6, 6)
 
 			client2.isAskedToPlayATurn()
 			client2.wantsToSee()
 
-			client1.receivesActualDice dice.create(6, 6)
-			client2.receivesActualDice dice.create(6, 6)
-			client1.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
-			client2.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
+			eachPlayer.receivesActualDice dice.create(6, 6)
+			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
+			eachPlayer.receivesScores client1: 1, client2: 0
 
-			client1.receivesScores client1: 1, client2: 0
-			client2.receivesScores client1: 1, client2: 0
+class MultipleClients
+	constructor: (clients) ->
+		wrapMethod = (methodName) =>
+			(args...) =>
+				for client in clients
+					client[methodName](args...)
 
+		exampleClient = clients[0]
+		for method of exampleClient
+			@[method] = wrapMethod method
+			
 class FakeClient
 	constructor: (@serverPort, @name) ->
 		@name = 'client' unless @name?
