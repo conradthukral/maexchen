@@ -223,7 +223,7 @@ describe 'Mia Game', ->
 			spyOn miaGame, 'currentPlayerLoses'
 			player1.yourTurn = garbage
 			miaGame.nextTurn()
-			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'invalid turn'
 
 		it 'should call currentPlayerLoses, when player answers after timeout', ->
 			spyOn miaGame, 'currentPlayerLoses'
@@ -241,6 +241,8 @@ describe 'Mia Game', ->
 				player1.yourTurn = ->
 				miaGame.nextTurn()
 			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
+			runs ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'failed to take a turn'
 
 	describe 'roll dice', ->
 		diceRoller =
@@ -284,6 +286,8 @@ describe 'Mia Game', ->
 				player1.yourRoll = (dice, announce) ->
 				miaGame.rollDice()
 			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
+			runs ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'failed to announce dice'
 
 	describe 'annouce', ->
 		it 'should store the announced roll, when she announces higher', ->
@@ -301,7 +305,7 @@ describe 'Mia Game', ->
 			spyOn miaGame, 'currentPlayerLoses'
 			miaGame.announcedDice = dice.create 3, 3
 			miaGame.announce(dice.create 2, 2)
-			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'announced losing dice'
 
 		it 'should broadcast, when she announces wrongly', ->
 			spyOn miaGame, 'broadcastAnnouncedDice'
@@ -324,7 +328,7 @@ describe 'Mia Game', ->
 			spyOn miaGame, 'currentPlayerLoses'
 			miaGame.actualDice = dice.create 2, 2
 			miaGame.announce(dice.create 1, 2)
-			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wrongly announced mia'
 
 	describe 'when player wants to see', ->
 		beforeEach ->
@@ -338,7 +342,7 @@ describe 'Mia Game', ->
 
 		it 'should make current player lose when no dice are available', ->
 			miaGame.showDice()
-			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wanted to see dice before the first roll'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
 
 		it 'should make last player lose when actualDice differ from announcedDice', ->
@@ -346,13 +350,13 @@ describe 'Mia Game', ->
 			miaGame.announcedDice = dice.create 1, 3
 			miaGame.showDice()
 			expect(miaGame.currentPlayerLoses).not.toHaveBeenCalled()
-			expect(miaGame.lastPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.lastPlayerLoses).toHaveBeenCalledWith 'was caught bluffing'
 
 		it 'should make current player lose when actualDice are same as announcedDice', ->
 			miaGame.actualDice = dice.create 2, 3
 			miaGame.announcedDice = dice.create 2, 3
 			miaGame.showDice()
-			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'saw that the announcement was true'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
 
 	describe 'broadcast announced dice', ->
@@ -382,9 +386,9 @@ describe 'Mia Game', ->
 			spyOn player2, 'playerLost'
 			spyOn player3, 'playerLost'
 			miaGame.currentPlayer = player2
-			miaGame.currentPlayerLoses()
-			expect(player2.playerLost).toHaveBeenCalledWith player2
-			expect(player3.playerLost).toHaveBeenCalledWith player2
+			miaGame.currentPlayerLoses 'theReason'
+			expect(player2.playerLost).toHaveBeenCalledWith player2, 'theReason'
+			expect(player3.playerLost).toHaveBeenCalledWith player2, 'theReason'
 			expect(player1.playerLost).not.toHaveBeenCalled()
 
 #	describe 'broadcast mia', ->

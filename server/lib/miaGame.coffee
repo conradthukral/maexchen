@@ -76,13 +76,13 @@ class MiaGame
 	nextTurn: ->
 		@currentRound.first (player) => @currentPlayer = player
 
-		expirer = @startExpirer (=> @currentPlayerLoses()), true
+		expirer = @startExpirer (=> @currentPlayerLoses 'failed to take a turn'), true
 
 		question = expirer.makeExpiring (turn) =>
 			switch turn
 				when Messages.ROLL then @rollDice()
 				when Messages.SEE then @showDice()
-				else @currentPlayerLoses()
+				else @currentPlayerLoses 'invalid turn'
 
 		@currentRound.first (player) ->
 			player.yourTurn question
@@ -90,7 +90,7 @@ class MiaGame
 	rollDice: ->
 		@actualDice = dice = @diceRoller.roll()
 
-		expirer = @startExpirer (=> @currentPlayerLoses()), true
+		expirer = @startExpirer (=> @currentPlayerLoses 'failed to announce dice'), true
 
 		announce = expirer.makeExpiring (announcedDice) =>
 			@announce(announcedDice)
@@ -105,7 +105,7 @@ class MiaGame
 			if dice.isMia()
 				@miaIsAnnounced()
 		else
-			@currentPlayerLoses()
+			@currentPlayerLoses 'announced losing dice'
 
 	broadcastAnnouncedDice: (dice) ->
 		@currentRound.each (player) =>
@@ -115,24 +115,26 @@ class MiaGame
 		if @actualDice.isMia()
 			@broadcastMia()
 		else
-			@currentPlayerLoses()
+			@currentPlayerLoses 'wrongly announced mia'
 
 	broadcastMia: ->
 
 	showDice: ->
 		@broadcastActualDice()
-		if not @actualDice? or @actualDice.equals(@announcedDice)
-			@currentPlayerLoses()
+		if not @actualDice?
+			@currentPlayerLoses 'wanted to see dice before the first roll'
+		else if @actualDice.equals(@announcedDice)
+			@currentPlayerLoses 'saw that the announcement was true'
 		else
-			@lastPlayerLoses()
+			@lastPlayerLoses 'was caught bluffing'
 
 	broadcastActualDice: ->
 		
-	currentPlayerLoses: ->
+	currentPlayerLoses: (reason) ->
 		@currentRound.each (player) =>
-			player.playerLost @currentPlayer
+			player.playerLost @currentPlayer, reason
 
-	lastPlayerLoses: ->
+	lastPlayerLoses: (reason) ->
 
 	startExpirer: (onExpireAction, cancelExpireAction = false) ->
 		expireCallback.startExpirer
