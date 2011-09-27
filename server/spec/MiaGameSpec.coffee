@@ -1,4 +1,5 @@
 class PlayerStub
+	constructor: (@name) ->
 	willJoinRound: ->
 	roundCanceled: ->
 	roundStarted: ->
@@ -20,7 +21,7 @@ describe 'Mia Game', ->
 
 	beforeEach ->
 		miaGame = mia.createGame()
-		players = [new PlayerStub, new PlayerStub, new PlayerStub]
+		players = [new PlayerStub('player1'), new PlayerStub('player2'), new PlayerStub('player3')]
 		player1 = players[0]
 		player2 = players[1]
 		player3 = players[2]
@@ -196,9 +197,11 @@ describe 'Mia Game', ->
 			miaGame.nextTurn()
 			expect(miaGame.currentPlayer).toBe player1
 
-			#runs -> miaGame.nextTurn()
-			#waitsFor currentPlayerIs(player2), 50
-			# TODO back to player 1 after that
+			miaGame.nextTurn()
+			expect(miaGame.currentPlayer).toBe player2
+
+			miaGame.nextTurn()
+			expect(miaGame.currentPlayer).toBe player1
 
 		it 'should tell the first player in round that it is her turn', ->
 			spyOn player1, 'yourTurn'

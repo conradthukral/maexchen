@@ -24,8 +24,14 @@ class PlayerList
 		# "do" makes sure, that player is used with the current value
 		# not the last player from the loop
 		do (player) ->
-			# call non-blocking
 			fn player
+
+	nextPlayer: () ->
+		if @currentPlayer? and @currentPlayer < @size() - 1
+			++@currentPlayer
+		else
+			@currentPlayer = 0
+		@players[@currentPlayer]
 
 class MiaGame
 	constructor: ->
@@ -74,7 +80,8 @@ class MiaGame
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		@currentRound.first (player) => @currentPlayer = player
+		@currentPlayer = @currentRound.nextPlayer()
+		return unless @currentPlayer
 
 		expirer = @startExpirer (=> @currentPlayerLoses 'failed to take a turn'), true
 
@@ -84,8 +91,7 @@ class MiaGame
 				when Messages.SEE then @showDice()
 				else @currentPlayerLoses 'invalid turn'
 
-		@currentRound.first (player) ->
-			player.yourTurn question
+		@currentPlayer.yourTurn question
 
 	rollDice: ->
 		@actualDice = dice = @diceRoller.roll()
