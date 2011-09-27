@@ -275,7 +275,7 @@ describe 'Mia Game', ->
 
 		beforeEach ->
 			miaGame.registerPlayer player1
-			miaGame.currentRound.add player1
+			miaGame.currentPlayer = player1
 			miaGame.setDiceRoller diceRoller
 			miaGame.setBroadcastTimeout 20
 			spyOn miaGame, 'currentPlayerLoses'

@@ -104,8 +104,7 @@ class MiaGame
 		announce = expirer.makeExpiring (announcedDice) =>
 			@announce(announcedDice)
 		
-		@currentRound.first (player) ->
-			player.yourRoll dice, announce
+		@currentPlayer.yourRoll dice, announce
 
 	announce: (dice) ->
 		return if @stopped
