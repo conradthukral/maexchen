@@ -357,10 +357,16 @@ describe 'Mia Game', ->
 			expect(miaGame.nextTurn).toHaveBeenCalled()
 
 		it 'should broadcast mia, when she announces mia correctly', ->
-			spyOn miaGame, 'broadcastMia'
+			spyOn miaGame, 'broadcastActualDice'
 			miaGame.actualDice = dice.create 2, 1
 			miaGame.announce(dice.create 1, 2)
-			expect(miaGame.broadcastMia).toHaveBeenCalled()
+			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
+
+		it 'should make everybody but the current player lose on mia', ->
+			spyOn miaGame, 'everybodyButTheCurrentPlayerLoses'
+			miaGame.actualDice = dice.create(2, 1)
+			miaGame.announce dice.create(2, 1)
+			expect(miaGame.everybodyButTheCurrentPlayerLoses).toHaveBeenCalledWith 'mia'
 
 		it 'should make player lose, when she announces mia wrongly', ->
 			miaGame.actualDice = dice.create 2, 2

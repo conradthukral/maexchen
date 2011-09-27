@@ -124,11 +124,10 @@ class MiaGame
 
 	miaIsAnnounced: ->
 		if @actualDice.isMia()
-			@broadcastMia()
+			@broadcastActualDice()
+			@everybodyButTheCurrentPlayerLoses 'mia'
 		else
 			@currentPlayerLoses 'wrongly announced mia'
-
-	broadcastMia: ->
 
 	showDice: ->
 		return if @stopped
@@ -152,6 +151,8 @@ class MiaGame
 		@broadcastScore()
 
 	lastPlayerLoses: (reason) ->
+	
+	everybodyButTheCurrentPlayerLoses: ->
 
 	broadcastScore: ->
 		allScores = @score.all()
