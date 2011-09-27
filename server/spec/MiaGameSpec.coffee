@@ -57,36 +57,30 @@ describe 'Mia Game', ->
 		it 'should broadcast new round', ->
 			spyOn player1, 'willJoinRound'
 			spyOn player2, 'willJoinRound'
-			runs ->
-				miaGame.newRound()
-			waitsFor (-> player1.willJoinRound.wasCalled), 20
-			waitsFor (-> player2.willJoinRound.wasCalled), 20
+			miaGame.newRound()
+			expect(player1.willJoinRound).toHaveBeenCalled()
+			expect(player2.willJoinRound).toHaveBeenCalled()
 
 		it 'should have player for current round when she wants to', ->
-			runs ->
-				player1.willJoinRound = accept
-				player2.willJoinRound = accept
-				miaGame.newRound()
-				expect(miaGame.currentRound).not.toHavePlayer player1
-			waitsFor (-> miaGame.currentRound.hasPlayer player1), 20
-			waitsFor (-> miaGame.currentRound.hasPlayer player2), 20
+			player1.willJoinRound = accept
+			player2.willJoinRound = accept
+			miaGame.newRound()
+
+			expect(miaGame.currentRound).toHavePlayer player1
+			expect(miaGame.currentRound).toHavePlayer player2
 
 		it 'should not have player for current round when she does not want to', ->
-			runs ->
-				player1.willJoinRound = deny
-				miaGame.newRound()
-			waits 20
-			runs ->
-				expect(miaGame.currentRound).not.toHavePlayer player1
+			player1.willJoinRound = deny
+			miaGame.newRound()
+			expect(miaGame.currentRound).not.toHavePlayer player1
 
 		it 'should not accept joins for the current round after timeout', ->
-			miaGame.setBroadcastTimeout 30
+			miaGame.setBroadcastTimeout 20
 			runs ->
 				player1.willJoinRound = (joinRound) ->
 					setTimeout (-> joinRound(true)), 40
 				miaGame.newRound()
 			waits 60
-
 			runs ->
 				expect(miaGame.currentRound).not.toHavePlayer player1
 
@@ -110,11 +104,10 @@ describe 'Mia Game', ->
 
 		it 'should start round after all players joined', ->
 			spyOn miaGame, 'startRound'
-			runs ->
-				player1.willJoinRound = accept
-				player2.willJoinRound = accept
-				miaGame.newRound()
-			waitsFor (-> miaGame.startRound.wasCalled), 20
+			player1.willJoinRound = accept
+			player2.willJoinRound = accept
+			miaGame.newRound()
+			expect(miaGame.startRound).toHaveBeenCalled()
 
 		it 'should start round after timeout when players are missing', ->
 			spyOn miaGame, 'startRound'
@@ -169,13 +162,13 @@ describe 'Mia Game', ->
 			player2.willJoinRound = accept
 			miaGame.newRound()
 			
-			waitsFor (-> player1.roundStarted.wasCalled), 50
-			waitsFor (-> player2.roundStarted.wasCalled), 50
+			expect(player1.roundStarted).toHaveBeenCalled()
+			expect(player2.roundStarted).toHaveBeenCalled()
 
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'
 			miaGame.startRound()
-			waitsFor (-> miaGame.nextTurn.wasCalled), 50
+			expect(miaGame.nextTurn).toHaveBeenCalled()
 
 		it 'should reset actualDice', ->
 			miaGame.actualDice = 'x'
@@ -194,44 +187,43 @@ describe 'Mia Game', ->
 			miaGame.currentRound.add player2
 			miaGame.setBroadcastTimeout 20
 
-		it 'should set the first player in round as currentPlayer', ->
+		currentPlayerIs = (player) ->
+			-> miaGame.currentPlayer == player
+
+		it 'should iterate over the players', ->
 			expect(miaGame.currentPlayer).toBeNull()
-			runs ->
-				miaGame.nextTurn()
-			waits 10
-			runs ->
-				expect(miaGame.currentPlayer).toBe player1
+
+			miaGame.nextTurn()
+			expect(miaGame.currentPlayer).toBe player1
+
+			#runs -> miaGame.nextTurn()
+			#waitsFor currentPlayerIs(player2), 50
+			# TODO back to player 1 after that
 
 		it 'should tell the first player in round that it is her turn', ->
 			spyOn player1, 'yourTurn'
 			spyOn player2, 'yourTurn'
-			runs ->
-				miaGame.nextTurn()
-			waits 10
-			runs ->
-				expect(player1.yourTurn).toHaveBeenCalled()
-				expect(player2.yourTurn).not.toHaveBeenCalled()
+			miaGame.nextTurn()
+			expect(player1.yourTurn).toHaveBeenCalled()
+			expect(player2.yourTurn).not.toHaveBeenCalled()
 
 		it 'should call rollDice, when player wants to roll', ->
 			spyOn miaGame, 'rollDice'
-			runs ->
-				player1.yourTurn = roll
-				miaGame.nextTurn()
-			waitsFor (-> miaGame.rollDice.wasCalled), 10
+			player1.yourTurn = roll
+			miaGame.nextTurn()
+			expect(miaGame.rollDice).toHaveBeenCalled()
 
 		it 'should call showDice, when player wants to see', ->
 			spyOn miaGame, 'showDice'
-			runs ->
-				player1.yourTurn = see
-				miaGame.nextTurn()
-			waitsFor (-> miaGame.showDice.wasCalled), 10
+			player1.yourTurn = see
+			miaGame.nextTurn()
+			expect(miaGame.showDice).toHaveBeenCalled()
 
 		it 'should call currentPlayerLoses, when player fails to answer', ->
 			spyOn miaGame, 'currentPlayerLoses'
-			runs ->
-				player1.yourTurn = garbage
-				miaGame.nextTurn()
-			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 10
+			player1.yourTurn = garbage
+			miaGame.nextTurn()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 
 		it 'should call currentPlayerLoses, when player answers after timeout', ->
 			spyOn miaGame, 'currentPlayerLoses'
@@ -239,9 +231,8 @@ describe 'Mia Game', ->
 			runs ->
 				player1.yourTurn = (question) -> setTimeout (-> roll(question)), 30
 				miaGame.nextTurn()
-			waits 50
+			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
 			runs ->
-				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 				expect(miaGame.rollDice).not.toHaveBeenCalled()
 
 		it 'should call currentPlayerLoses, when player does not answer', ->
@@ -249,9 +240,7 @@ describe 'Mia Game', ->
 			runs ->
 				player1.yourTurn = ->
 				miaGame.nextTurn()
-			waits 30
-			runs ->
-				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
 
 	describe 'roll dice', ->
 		diceRoller =
@@ -265,11 +254,9 @@ describe 'Mia Game', ->
 
 		it 'should inform the player about their roll', ->
 			spyOn player1, 'yourRoll'
-			runs ->
-				miaGame.rollDice()
-			waitsFor (-> player1.yourRoll.wasCalled), 10
-			runs ->
-				expect(player1.yourRoll.mostRecentCall.args[0]).toBe 'theDice'
+			miaGame.rollDice()
+			expect(player1.yourRoll).toHaveBeenCalled()
+			expect(player1.yourRoll.mostRecentCall.args[0]).toBe 'theDice'
 
 		it 'should store the actual roll', ->
 			miaGame.rollDice()
@@ -277,12 +264,9 @@ describe 'Mia Game', ->
 
 		it 'should call announce with the announced dice', ->
 			spyOn miaGame, 'announce'
-			runs ->
-				player1.yourRoll = (dice, announce) -> announce 'announcedDice'
-				miaGame.rollDice()
-			waitsFor (-> miaGame.announce.wasCalled), 10
-			runs ->
-				expect(miaGame.announce).toHaveBeenCalledWith 'announcedDice'
+			player1.yourRoll = (dice, announce) -> announce 'announcedDice'
+			miaGame.rollDice()
+			expect(miaGame.announce).toHaveBeenCalledWith 'announcedDice'
 
 		it 'should make the player lose, when she does not announce within time', ->
 			spyOn miaGame, 'announce'
@@ -290,19 +274,16 @@ describe 'Mia Game', ->
 			runs ->
 				player1.yourRoll = (dice, announce) -> setTimeout announce, 30
 				miaGame.rollDice()
-			waits 50
+			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
 			runs ->
 				expect(miaGame.announce).not.toHaveBeenCalled()
-				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 
 		it 'should make the player lose, when she does not announce', ->
 			spyOn miaGame, 'currentPlayerLoses'
 			runs ->
 				player1.yourRoll = (dice, announce) ->
 				miaGame.rollDice()
-			waits 30
-			runs ->
-				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
+			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
 
 	describe 'annouce', ->
 		it 'should store the announced roll, when she announces higher', ->
@@ -384,15 +365,11 @@ describe 'Mia Game', ->
 			spyOn player1, 'announcedDiceBy'
 			spyOn player2, 'announcedDiceBy'
 			spyOn player3, 'announcedDiceBy'
-			runs ->
-				miaGame.announcedDice = 'theDice'
-				miaGame.currentPlayer = player2
-				miaGame.broadcastAnnouncedDice()
-			waitsFor (-> player2.announcedDiceBy.wasCalled), 10
-			runs ->
-				expect(player2.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
-				expect(player3.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
-				expect(player1.announcedDiceBy).not.toHaveBeenCalled()
+			miaGame.currentPlayer = player2
+			miaGame.broadcastAnnouncedDice 'theDice'
+			expect(player2.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
+			expect(player3.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
+			expect(player1.announcedDiceBy).not.toHaveBeenCalled()
 
 	describe 'current player loses', ->
 		beforeEach ->
@@ -404,14 +381,11 @@ describe 'Mia Game', ->
 			spyOn player1, 'playerLost'
 			spyOn player2, 'playerLost'
 			spyOn player3, 'playerLost'
-			runs ->
-				miaGame.currentPlayer = player2
-				miaGame.currentPlayerLoses()
-			waitsFor (-> player2.playerLost.wasCalled), 10
-			runs ->
-				expect(player2.playerLost).toHaveBeenCalledWith player2
-				expect(player3.playerLost).toHaveBeenCalledWith player2
-				expect(player1.playerLost).not.toHaveBeenCalled()
+			miaGame.currentPlayer = player2
+			miaGame.currentPlayerLoses()
+			expect(player2.playerLost).toHaveBeenCalledWith player2
+			expect(player3.playerLost).toHaveBeenCalledWith player2
+			expect(player1.playerLost).not.toHaveBeenCalled()
 
 #	describe 'broadcast mia', ->
 #		it 'should announce that the following player loses', ->

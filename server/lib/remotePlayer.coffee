@@ -8,39 +8,34 @@ class InactiveState
 		this
 
 class WaitingForJoinState
-	constructor: (@expectedToken, @joinCallback) ->
+	constructor: (@token, @callback, @nextState) ->
 	handleMessage: (messageCommand, messageArgs) ->
 		actualToken = messageArgs[0]
-		if messageCommand == 'JOIN' and actualToken == @expectedToken
-			@joinCallback true
-			new InactiveState
-		else
-			this
+		if messageCommand == 'JOIN' and actualToken == @token
+			@nextState new InactiveState
+			@callback true
 
 class WaitingForTurnState
-	constructor: (@token, @callback) ->
+	constructor: (@token, @callback, @nextState) ->
 	handleMessage: (command, args) ->
 		token = args[0]
 		if (token == @token)
 			switch command
 				when 'ROLL'
+					@nextState new InactiveState
 					@callback miaGame.Messages.ROLL
-					return new InactiveState
 				when 'SEE'
+					@nextState new InactiveState
 					@callback miaGame.Messages.SEE
-					return new InactiveState
-		this
 
 class WaitingForAnnounceState
-	constructor: (@token, @callback) ->
+	constructor: (@token, @callback, @nextState) ->
 	handleMessage: (command, args) ->
 		announcedDice = dice.parse args[0]
 		token = args[1]
 		if command == 'ANNOUNCE' and token == @token and announcedDice
+			@nextState new InactiveState
 			@callback announcedDice
-			new InactiveState
-		else
-			this
 
 class RemotePlayer
 	constructor: (@name, @sendMessageCallback) ->
@@ -49,24 +44,27 @@ class RemotePlayer
 	registered: ->
 		@sendMessage 'REGISTERED;0'
 
+	changeState: (newState) =>
+		@currentState = newState
+
 	willJoinRound: (callback) ->
 		token = @generateToken()
-		@currentState = new WaitingForJoinState(token, callback)
+		@changeState new WaitingForJoinState(token, callback, @changeState)
 		@sendMessage "ROUND STARTING;#{token}"
 
 	yourTurn: (callback) ->
 		token = @generateToken()
-		@currentState = new WaitingForTurnState(token, callback)
+		@changeState new WaitingForTurnState(token, callback, @changeState)
 		@sendMessage "YOUR TURN;#{token}"
 
 	yourRoll: (dice, callback) ->
 		token = @generateToken()
-		@currentState = new WaitingForAnnounceState(token, callback)
+		@changeState new WaitingForAnnounceState(token, callback, @changeState)
 		@sendMessage "ROLLED;#{dice};#{token}"
 
 	roundCanceled: (reason) ->
+		@changeState new InactiveState
 		@sendMessage "ROUND CANCELED;#{reason}"
-		@currentState = new InactiveState
 
 	roundStarted: ->
 		@sendMessage "ROUND STARTED;testClient:0" #TODO correct players/scores
@@ -77,7 +75,7 @@ class RemotePlayer
 	playerLost: (player) ->
 
 	handleMessage: (messageCommand, messageArgs) ->
-		@currentState = @currentState.handleMessage messageCommand, messageArgs
+		@currentState.handleMessage messageCommand, messageArgs
 
 	sendMessage: (message) ->
 		@sendMessageCallback message

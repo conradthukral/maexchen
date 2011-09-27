@@ -18,14 +18,14 @@ class PlayerList
 
 	first: (fn) ->
 		return if @isEmpty()
-		setTimeout (=> fn @players[0]), 0
+		fn @players[0]
 
 	each: (fn) -> for player in @players
 		# "do" makes sure, that player is used with the current value
 		# not the last player from the loop
 		do (player) ->
 			# call non-blocking
-			setTimeout (-> fn player), 0
+			fn player
 
 class MiaGame
 	constructor: ->
@@ -99,7 +99,7 @@ class MiaGame
 			player.yourRoll dice, announce
 
 	announce: (dice) ->
-		@broadcastAnnouncedDice()
+		@broadcastAnnouncedDice dice
 		if not @announcedDice? or dice.isHigherThan @announcedDice
 			@announcedDice = dice
 			if dice.isMia()
@@ -107,9 +107,9 @@ class MiaGame
 		else
 			@currentPlayerLoses()
 
-	broadcastAnnouncedDice: ->
+	broadcastAnnouncedDice: (dice) ->
 		@currentRound.each (player) =>
-			player.announcedDiceBy @announcedDice, @currentPlayer
+			player.announcedDiceBy dice, @currentPlayer
 
 	miaIsAnnounced: ->
 		if @actualDice.isMia()
