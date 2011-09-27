@@ -20,11 +20,7 @@ class PlayerList
 		return if @isEmpty()
 		fn @players[0]
 
-	each: (fn) -> for player in @players
-		# "do" makes sure, that player is used with the current value
-		# not the last player from the loop
-		do (player) ->
-			fn player
+	each: (fn) -> @players.forEach(fn)
 
 	nextPlayer: () ->
 		if @currentPlayer? and @currentPlayer < @size() - 1
