@@ -19,6 +19,8 @@ describe 'the Mia server', ->
 
 	beforeEach ->
 		server = miaServer.start serverPort, timeoutForClientAnswers
+		server.rolls = (die1, die2) ->
+			@setDiceRoller new FakeDiceRoller dice.create(die1, die2)
 
 	afterEach ->
 		server.shutDown()
@@ -74,6 +76,50 @@ describe 'the Mia server', ->
 			
 			player.receivesOfferToJoinRound()
 
+	describe 'previously registered player registers again', ->
+
+		oldPlayer = newPlayer = otherPlayer = null
+
+		beforeEach ->
+			oldPlayer = setupFakeClient 'thePlayer'
+			otherPlayer = setupFakeClient 'theOtherPlayer'
+			server.rolls 3, 1
+			keepServerFromPermutingThePlayers()
+			runs -> server.startGame()
+
+		afterEach ->
+			oldPlayer.shutDown()
+			newPlayer.shutDown()
+			otherPlayer.shutDown()
+
+		playRound = (player1, player2) ->
+			player1.isAskedToPlayATurn()
+			player1.rolls()
+			player1.receivesRolledDice dice.create(3, 1)
+			player1.announcesDice dice.create(6, 6)
+			player2.isAskedToPlayATurn()
+			player2.wantsToSee()
+
+		it 'should allow the new player to take the place of the old player in the next round, keeping the score', ->
+			otherPlayer.receivesOfferToJoinRound()
+			otherPlayer.joinsRound()
+
+			oldPlayer.receivesOfferToJoinRound()
+			oldPlayer.joinsRound()
+
+			newPlayer = setupFakeClient 'thePlayer'
+
+			playRound otherPlayer, oldPlayer
+
+			otherPlayer.receivesOfferToJoinRound()
+			otherPlayer.joinsRound()
+			newPlayer.receivesOfferToJoinRound()
+			newPlayer.joinsRound()
+
+			playRound otherPlayer, newPlayer
+
+			newPlayer.receivesScores theOtherPlayer: 0, thePlayer: 2
+
 	describe 'with two registered players', ->
 
 		client1 = client2 = null
@@ -81,8 +127,6 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			keepServerFromPermutingThePlayers()
-			server.rolls = (die1, die2) ->
-				@setDiceRoller new FakeDiceRoller dice.create(die1, die2)
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
 			eachPlayer = new MultipleClients [client1, client2]
