@@ -102,13 +102,13 @@ class MiaGame
 		[@currentPlayer, @lastPlayer] = @currentRound.nextPlayer()
 		return unless @currentPlayer
 
-		expirer = @startExpirer (=> @currentPlayerLoses 'failed to take a turn'), true
+		expirer = @startExpirer (=> @currentPlayerLoses 'DID_NOT_TAKE_TURN'), true
 
 		question = expirer.makeExpiring (turn) =>
 			switch turn
 				when Messages.ROLL then @rollDice()
 				when Messages.SEE then @showDice()
-				else @currentPlayerLoses 'invalid turn'
+				else @currentPlayerLoses 'INVALID_TURN'
 
 		@currentPlayer.yourTurn question
 
@@ -118,7 +118,7 @@ class MiaGame
 			player.playerRolls @currentPlayer
 		@actualDice = dice = @diceRoller.roll()
 
-		expirer = @startExpirer (=> @currentPlayerLoses 'failed to announce dice'), true
+		expirer = @startExpirer (=> @currentPlayerLoses 'DID_NOT_ANNOUNCE'), true
 
 		announce = expirer.makeExpiring (announcedDice) =>
 			@announce(announcedDice)
@@ -135,7 +135,7 @@ class MiaGame
 			else
 				@nextTurn()
 		else
-			@currentPlayerLoses 'announced losing dice'
+			@currentPlayerLoses 'ANNOUNCED_LOSING_DICE'
 
 	broadcastAnnouncedDice: (dice) ->
 		@players.each (player) =>
@@ -144,22 +144,22 @@ class MiaGame
 	miaIsAnnounced: ->
 		@broadcastActualDice()
 		if @actualDice.isMia()
-			@everybodyButTheCurrentPlayerLoses 'mia'
+			@everybodyButTheCurrentPlayerLoses 'MIA'
 		else
-			@currentPlayerLoses 'wrongly announced mia'
+			@currentPlayerLoses 'LIED_ABOUT_MIA'
 
 	showDice: ->
 		return if @stopped
 		@players.each (player) =>
 			player.playerWantsToSee @currentPlayer
 		if not @actualDice?
-			@currentPlayerLoses 'wanted to see dice before the first roll'
+			@currentPlayerLoses 'SEE_BEFORE_FIRST_ROLL'
 			return
 		@broadcastActualDice()
 		if @announcedDice.isHigherThan @actualDice
-			@lastPlayerLoses 'was caught bluffing'
+			@lastPlayerLoses 'CAUGHT_BLUFFING'
 		else
-			@currentPlayerLoses 'saw that the announcement was true'
+			@currentPlayerLoses 'SEE_FAILED'
 
 	broadcastActualDice: ->
 		@players.each (player) =>
