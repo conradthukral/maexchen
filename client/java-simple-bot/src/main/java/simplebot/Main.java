@@ -2,6 +2,7 @@ package simplebot;
 
 import java.io.IOException;
 
+import udphelper.MessageListener;
 import udphelper.UdpCommunicator;
 
 public class Main {
@@ -12,7 +13,8 @@ public class Main {
 		String clientName = args[2];
 		
 		UdpCommunicator communicator = new UdpCommunicator(serverHost, serverPort);
-		communicator.addMessageListener(new SimpleBot(clientName, communicator.getMessageSender()));
+		MessageListener bot = new RandomBot(clientName, communicator.getMessageSender());
+		communicator.addMessageListener(bot);
 		communicator.listenForMessages();
 	}
 
