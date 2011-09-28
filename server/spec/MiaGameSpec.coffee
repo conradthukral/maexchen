@@ -163,17 +163,16 @@ describe 'Mia Game', ->
 			miaGame.startRound()
 			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
 
-		it 'should notify players when starting a new round', ->
+		it 'should notify all players when starting a new round', ->
 			miaGame.permuteCurrentRound = ->
 			registerPlayers 1, 2
 			spyOn player1, 'roundStarted'
 			spyOn player2, 'roundStarted'
 			miaGame.currentRound.add player1
-			miaGame.currentRound.add player2
 			miaGame.startRound()
 			
-			expect(player1.roundStarted).toHaveBeenCalledWith [player1, player2]
-			expect(player2.roundStarted).toHaveBeenCalledWith [player1, player2]
+			expect(player1.roundStarted).toHaveBeenCalledWith [player1]
+			expect(player2.roundStarted).toHaveBeenCalledWith [player1]
 
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'
@@ -469,29 +468,24 @@ describe 'Mia Game', ->
 
 	describe 'broadcast dice', ->
 		beforeEach ->
-			registerPlayers 1, 2, 3
+			registerPlayers 1, 2
 			miaGame.currentRound.add player2
-			miaGame.currentRound.add player3
 			
-		it 'should tell everybody in current round about the announced dice', ->
+		it 'should tell all players about the announced dice', ->
 			spyOn player1, 'announcedDiceBy'
 			spyOn player2, 'announcedDiceBy'
-			spyOn player3, 'announcedDiceBy'
 			miaGame.currentPlayer = player2
 			miaGame.broadcastAnnouncedDice 'theDice'
+			expect(player1.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
 			expect(player2.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
-			expect(player3.announcedDiceBy).toHaveBeenCalledWith 'theDice', player2
-			expect(player1.announcedDiceBy).not.toHaveBeenCalled()
 
-		it 'should tell everybody in current round about the actual dice', ->
+		it 'should tell all players about the actual dice', ->
 			spyOn player1, 'actualDice'
 			spyOn player2, 'actualDice'
-			spyOn player3, 'actualDice'
 			miaGame.actualDice = 'theDice'
 			miaGame.broadcastActualDice()
+			expect(player1.actualDice).toHaveBeenCalledWith 'theDice'
 			expect(player2.actualDice).toHaveBeenCalledWith 'theDice'
-			expect(player3.actualDice).toHaveBeenCalledWith 'theDice'
-			expect(player1.actualDice).not.toHaveBeenCalled()
 
 	describe 'current player loses', ->
 		beforeEach ->
@@ -540,14 +534,14 @@ describe 'Mia Game', ->
 			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player2
 			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player3
 
-		it 'should broadcast player lost to everyone in the round', ->
+		it 'should broadcast player lost to all players', ->
 			spyOn player1, 'playerLost'
 			spyOn player2, 'playerLost'
 			spyOn player3, 'playerLost'
 			miaGame.playersLose [player2], 'theReason'
 			expect(player1.playerLost).toHaveBeenCalledWith [player2], 'theReason'
 			expect(player2.playerLost).toHaveBeenCalledWith [player2], 'theReason'
-			expect(player3.playerLost).not.toHaveBeenCalled()
+			expect(player3.playerLost).toHaveBeenCalledWith [player2], 'theReason'
 
 		it 'should do nothing if game is stopped', ->
 			spyOn player1, 'playerLost'

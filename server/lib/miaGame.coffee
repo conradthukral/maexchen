@@ -81,6 +81,7 @@ class MiaGame
 		@announcedDice = null
 		@currentRound.each (player) =>
 			@score.increaseFor player
+		@players.each (player) =>
 			player.roundStarted @currentRound.players
 		if @currentRound.size() > 1
 			@nextTurn()
@@ -133,7 +134,7 @@ class MiaGame
 			@currentPlayerLoses 'announced losing dice'
 
 	broadcastAnnouncedDice: (dice) ->
-		@currentRound.each (player) =>
+		@players.each (player) =>
 			player.announcedDiceBy dice, @currentPlayer
 
 	miaIsAnnounced: ->
@@ -154,7 +155,7 @@ class MiaGame
 			@currentPlayerLoses 'saw that the announcement was true'
 
 	broadcastActualDice: ->
-		@currentRound.each (player) =>
+		@players.each (player) =>
 			player.actualDice @actualDice
 		
 	currentPlayerLoses: (reason) -> @playersLose [@currentPlayer], reason
@@ -169,7 +170,7 @@ class MiaGame
 		return if @stopped
 		for player in losingPlayers
 			@score.decreaseFor player
-		@currentRound.each (player) ->
+		@players.each (player) ->
 			player.playerLost losingPlayers, reason
 		@broadcastScore()
 		@newRound()
