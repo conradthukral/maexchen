@@ -26,9 +26,7 @@ class PlayerList
 	each: (fn) -> @players.forEach(fn)
 	
 	collect: (predicate) ->
-		result = []
-		(result.push player if predicate(player)) for player in @players
-		result
+		player for player in @players when predicate(player)
 
 	nextPlayer: () ->
 		if @currentPlayer? and @currentPlayer < @size() - 1
