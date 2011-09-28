@@ -208,7 +208,7 @@ describe 'the Mia server', ->
 			eachPlayer.shutDown()
 
 		it 'when mia is announced, all other players immediately lose', ->
-			server.setDiceRoller new FakeDiceRoller dice.create(2, 1)
+			server.rolls 2, 1
 			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
 			
@@ -223,7 +223,7 @@ describe 'the Mia server', ->
 			eachPlayer.receivesScores client1: 1, client2: 0, client3: 0
 
 		it 'when mia is announced wrongly, player immediately loses', ->
-			server.setDiceRoller new FakeDiceRoller dice.create(3, 1)
+			server.rolls 3, 1
 			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
 			
