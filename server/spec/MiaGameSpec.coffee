@@ -394,12 +394,19 @@ describe 'Mia Game', ->
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wanted to see dice before the first roll'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
 
-		it 'should make last player lose when actualDice differ from announcedDice', ->
-			miaGame.actualDice = dice.create 2, 3
-			miaGame.announcedDice = dice.create 1, 3
+		it 'should make last player lose when actualDice are lower than announcedDice', ->
+			miaGame.actualDice = dice.create 3, 1
+			miaGame.announcedDice = dice.create 3, 3
 			miaGame.showDice()
 			expect(miaGame.currentPlayerLoses).not.toHaveBeenCalled()
 			expect(miaGame.lastPlayerLoses).toHaveBeenCalledWith 'was caught bluffing'
+
+		it 'should make current lose when actualDice are higher than announcedDice', ->
+			miaGame.actualDice = dice.create 3, 3
+			miaGame.announcedDice = dice.create 3, 1
+			miaGame.showDice()
+			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'saw that the announcement was true'
 
 		it 'should make current player lose when actualDice are same as announcedDice', ->
 			miaGame.actualDice = dice.create 2, 3

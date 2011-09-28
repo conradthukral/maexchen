@@ -134,10 +134,10 @@ class MiaGame
 		@broadcastActualDice()
 		if not @actualDice?
 			@currentPlayerLoses 'wanted to see dice before the first roll'
-		else if @actualDice.equals(@announcedDice)
-			@currentPlayerLoses 'saw that the announcement was true'
-		else
+		else if @announcedDice.isHigherThan @actualDice
 			@lastPlayerLoses 'was caught bluffing'
+		else
+			@currentPlayerLoses 'saw that the announcement was true'
 
 	broadcastActualDice: ->
 		@currentRound.each (player) =>
