@@ -3,8 +3,10 @@ apply plugin: 'maven'
 apply plugin: 'eclipse'
 
 group = 'de.andrena'
+version = '1.0'
 
 repositories {
+	mavenLocal()
     mavenCentral()
 }
 

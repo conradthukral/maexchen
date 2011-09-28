@@ -43,14 +43,15 @@ public class UdpCommunicator {
 		return channel.socket().getLocalPort();
 	}
 
-	/**
-	 * Send a message to the remote host.
-	 */
-	public void send(String message) throws IOException {
-		InetSocketAddress destination = new InetSocketAddress(remoteHost, remotePort);
-		channel.send(UTF8.encode(message), destination);
+	public MessageSender getMessageSender() {
+		return new MessageSender() {
+			public void send(String message) throws IOException {
+				InetSocketAddress destination = new InetSocketAddress(remoteHost, remotePort);
+				channel.send(UTF8.encode(message), destination);
+			}
+		};
 	}
-
+	
 	/**
 	 * Makes this UdpCommunicator listen for incoming messages.
 	 * 
