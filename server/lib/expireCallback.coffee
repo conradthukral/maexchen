@@ -6,23 +6,25 @@ startExpirer = (conf = {}) ->
 	onExpire ?= ->
 	cancelExpireAction ?= false
 
-	preventOnExpireAction = false
 	expired = false
 
 	callOnExpire = ->
-		onExpire() unless preventOnExpireAction
+		onExpire()
 		expired = true
 
 	setTimeout callOnExpire, timeout
 
 	makeExpiring = (callback) ->
 		(arg...) ->
-			preventOnExpireAction = cancelExpireAction
+			cancelExpireActions() if cancelExpireAction
 			callback(arg...) unless expired
+
+	cancelExpireActions = ->
+		onExpire = ->
 
 	expirer =
 		makeExpiring: makeExpiring
-		cancelExpireActions: -> preventOnExpireAction = true
+		cancelExpireActions: cancelExpireActions
 
 exports.startExpirer = startExpirer
 exports.setDefaultTimeout = (timeout = 200) -> defaultTimeout = timeout
