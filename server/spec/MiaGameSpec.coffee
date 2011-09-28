@@ -466,75 +466,23 @@ describe 'Mia Game', ->
 
 	describe 'current player loses', ->
 		beforeEach ->
-			registerPlayers 1, 2, 3
-			miaGame.currentRound.add player2
-			miaGame.currentRound.add player3
+			registerPlayers 1
 
-		it 'should decrease the score', ->
-			spyOn miaGame.score, 'decreaseFor'
-			miaGame.currentPlayer = player2
+		it 'should call players lose with the current player', ->
+			spyOn miaGame, 'playersLose'
+			miaGame.currentPlayer = player1
 			miaGame.currentPlayerLoses 'theReason'
-			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player2
-			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player3
-
-		it 'should broadcast player lost to everyone in the round', ->
-			spyOn player1, 'playerLost'
-			spyOn player2, 'playerLost'
-			spyOn player3, 'playerLost'
-			miaGame.currentPlayer = player2
-			miaGame.currentPlayerLoses 'theReason'
-			expect(player2.playerLost).toHaveBeenCalledWith [player2], 'theReason'
-			expect(player3.playerLost).toHaveBeenCalledWith [player2], 'theReason'
-			expect(player1.playerLost).not.toHaveBeenCalled()
-
-		it 'should do nothing if game is stopped', ->
-			spyOn player2, 'playerLost'
-			miaGame.currentPlayer = player2
-			miaGame.stop()
-			miaGame.currentPlayerLoses 'aReason'
-			expect(player2.playerLost).not.toHaveBeenCalled()
-
-		it 'should broadcast the score of all players to all players', ->
-			spyOn miaGame, 'broadcastScore'
-			miaGame.currentPlayer = player2
-			miaGame.currentPlayerLoses 'aReason'
-			expect(miaGame.broadcastScore).toHaveBeenCalled()
+			expect(miaGame.playersLose).toHaveBeenCalledWith [player1], 'theReason'
 
 	describe 'last player loses', ->
 		beforeEach ->
-			registerPlayers 1, 2, 3
-			miaGame.currentRound.add player2
-			miaGame.currentRound.add player3
+			registerPlayers 1
 
-		it 'should decrease the score', ->
-			spyOn miaGame.score, 'decreaseFor'
-			miaGame.lastPlayer = player2
+		it 'should call players lose with the last player', ->
+			spyOn miaGame, 'playersLose'
+			miaGame.lastPlayer = player1
 			miaGame.lastPlayerLoses 'theReason'
-			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player2
-			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player3
-
-		it 'should broadcast player lost to everyone in the round', ->
-			spyOn player1, 'playerLost'
-			spyOn player2, 'playerLost'
-			spyOn player3, 'playerLost'
-			miaGame.lastPlayer = player2
-			miaGame.lastPlayerLoses 'theReason'
-			expect(player2.playerLost).toHaveBeenCalledWith [player2], 'theReason'
-			expect(player3.playerLost).toHaveBeenCalledWith [player2], 'theReason'
-			expect(player1.playerLost).not.toHaveBeenCalled()
-
-		it 'should do nothing if game is stopped', ->
-			spyOn player2, 'playerLost'
-			miaGame.lastPlayer = player2
-			miaGame.stop()
-			miaGame.lastPlayerLoses 'aReason'
-			expect(player2.playerLost).not.toHaveBeenCalled()
-
-		it 'should broadcast the score of all players to all players', ->
-			spyOn miaGame, 'broadcastScore'
-			miaGame.lastPlayer = player2
-			miaGame.lastPlayerLoses 'aReason'
-			expect(miaGame.broadcastScore).toHaveBeenCalled()
+			expect(miaGame.playersLose).toHaveBeenCalledWith [player1], 'theReason'
 
 	describe 'everybody but the current player loses', ->
 		beforeEach ->
@@ -543,30 +491,44 @@ describe 'Mia Game', ->
 			miaGame.currentRound.add player2
 			miaGame.currentRound.add player3
 
-		it 'should decrease the score for all other players in the round', ->
-			spyOn miaGame.score, 'decreaseFor'
+		it 'should call players lose with all but the current player', ->
+			spyOn miaGame, 'playersLose'
 			miaGame.currentPlayer = player1
 			miaGame.everybodyButTheCurrentPlayerLoses 'aReason'
+			expect(miaGame.playersLose).toHaveBeenCalledWith [player2, player3], 'aReason'
+
+	describe 'players lose', ->
+		beforeEach ->
+			registerPlayers 1, 2, 3
+			miaGame.currentRound.add player1
+			miaGame.currentRound.add player2
+
+		it 'should decrease the score', ->
+			spyOn miaGame.score, 'decreaseFor'
+			miaGame.playersLose [player1, player2], 'theReason'
+			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player1
 			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player2
-			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player3
-			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player1
-			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player4
+			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player3
 
 		it 'should broadcast player lost to everyone in the round', ->
 			spyOn player1, 'playerLost'
 			spyOn player2, 'playerLost'
 			spyOn player3, 'playerLost'
-			spyOn player4, 'playerLost'
-			miaGame.currentPlayer = player1
-			miaGame.everybodyButTheCurrentPlayerLoses 'aReason'
-			expect(player1.playerLost).toHaveBeenCalledWith [player2, player3], 'aReason'
-			expect(player2.playerLost).toHaveBeenCalledWith [player2, player3], 'aReason'
-			expect(player3.playerLost).toHaveBeenCalledWith [player2, player3], 'aReason'
+			miaGame.playersLose [player2], 'theReason'
+			expect(player1.playerLost).toHaveBeenCalledWith [player2], 'theReason'
+			expect(player2.playerLost).toHaveBeenCalledWith [player2], 'theReason'
+			expect(player3.playerLost).not.toHaveBeenCalled()
 
-		it 'should broadcast the score of all players to all players', ->
+		it 'should do nothing if game is stopped', ->
+			spyOn player1, 'playerLost'
+			miaGame.lastPlayer = player1
+			miaGame.stop()
+			miaGame.playersLose [player2], 'aReason'
+			expect(player1.playerLost).not.toHaveBeenCalled()
+
+		it 'should broadcast the score', ->
 			spyOn miaGame, 'broadcastScore'
-			miaGame.currentPlayer = player1
-			miaGame.everybodyButTheCurrentPlayerLoses 'aReason'
+			miaGame.playersLose [player1], 'aReason'
 			expect(miaGame.broadcastScore).toHaveBeenCalled()
 
 	describe 'broadcast score', ->
