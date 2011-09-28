@@ -42,7 +42,7 @@ class RemotePlayer
 		@currentState = new InactiveState
 
 	registered: ->
-		@sendMessage 'REGISTERED;0'
+		@sendMessage 'REGISTERED'
 
 	changeState: (newState) =>
 		@currentState = newState

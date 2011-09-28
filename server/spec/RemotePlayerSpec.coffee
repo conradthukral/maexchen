@@ -127,6 +127,6 @@ describe "remotePlayer", ->
 
 		it 'should send message when registered successfully', ->
 			player.registered()
-			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REGISTERED;0' # TODO: correct score
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REGISTERED'
 
 

@@ -15,10 +15,10 @@ Protokoll
 
 Anmelden
 --------
-- client->server: REGISTER;name;passwort
-- Falls name neu ist oder das vorher gespeicherte Passwort stimmt:
+- client->server: REGISTER;name
+- Falls name neu ist, oder die registrierung unter demselben namen zuletzt von derselben IP kam:
   - Server kommuniziert mit dem Client ab jetzt, indem er Nachrichten an die Ursprungs-IP und Ursprungs-Port der Register-Nachricht schickt.
-  - server->client: REGISTERED;punktestand
+  - server->client: REGISTERED
 - Ansonsten:
   server->client: REJECTED
 

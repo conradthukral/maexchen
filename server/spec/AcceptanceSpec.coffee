@@ -215,10 +215,10 @@ class FakeClient
 		@currentToken = 'noTokenReceived'
 
 	sendPlayerRegistration: ->
-		@send "REGISTER;#{@name};testPwd"
+		@send "REGISTER;#{@name}"
 
 	receivesRegistrationConfirmation: ->
-		@receives 'REGISTERED;0'
+		@receives 'REGISTERED'
 
 	receivesOfferToJoinRound: ->
 		@receivesWithAppendedToken 'ROUND STARTING'
