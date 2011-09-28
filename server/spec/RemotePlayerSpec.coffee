@@ -115,9 +115,10 @@ describe "remotePlayer", ->
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ACTUAL DICE;3,2'
 
 		it 'should send PLAYER LOST notifications', ->
-			losingPlayer = name: 'theLosingPlayer'
-			player.playerLost losingPlayer, 'theReason'
-			expect(mySpy.sendMessage).toHaveBeenCalledWith 'PLAYER LOST;theLosingPlayer;theReason'
+			losingPlayer1 = name: 'player1'
+			losingPlayer2 = name: 'player2'
+			player.playerLost [losingPlayer1, losingPlayer2], 'theReason'
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'PLAYER LOST;player1,player2;theReason'
 
 		it 'should send SCORE notifications', ->
 			scores = player1: 23, player2: 42

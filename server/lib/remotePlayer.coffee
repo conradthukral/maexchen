@@ -76,8 +76,9 @@ class RemotePlayer
 	actualDice: (dice) ->
 		@sendMessage "ACTUAL DICE;#{dice}"
 
-	playerLost: (player, reason) ->
-		@sendMessage "PLAYER LOST;#{player.name};#{reason}"
+	playerLost: (players, reason) ->
+		playersString = (player.name for player in players).join()
+		@sendMessage "PLAYER LOST;#{playersString};#{reason}"
 
 	currentScore: (scores) ->
 		scoreString = ("#{name}:#{score}" for name, score of scores).join()

@@ -49,12 +49,15 @@ Bei ROLL:
 - client->server: ANNOUNCE;dice';token
 - server->clients: ANNOUNCED;name;dice
 
+Falls Mäxchen angesagt wurde, wird sofort aufgedeckt. Wenn tatsächlich Mäxchen gewürfelt wurde, verlieren alle anderen Spieler, ansonsten der ansagende.
+- server -> clients: PLAYER LOST;names;reason (wobei names eine kommagetrennte liste ist)
+
 Bei SEE:
 Server überprüft, ob zuletzt angesagte Würfel okay sind
 - server->clients: ACTUAL DICE;dice
 - server->clients: PLAYER LOST;name;reason
 
-Wann immer ein Spieler nicht rechtzeitig antwortet oder sonst etwas falsch macht:
+Wann immer ein Spieler nicht rechtzeitig antwortet oder etwas völlig falsch macht:
 - server->clients: PLAYER LOST;name;reason
 
 Nach Ende einer Runde:

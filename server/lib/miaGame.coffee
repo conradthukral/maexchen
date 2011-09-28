@@ -25,6 +25,11 @@ class PlayerList
 		# not the last player from the loop
 		do (player) ->
 			fn player
+	
+	collect: (predicate) ->
+		result = []
+		(result.push player if predicate(player)) for player in @players
+		result
 
 	nextPlayer: () ->
 		if @currentPlayer? and @currentPlayer < @size() - 1
@@ -147,12 +152,17 @@ class MiaGame
 		return if @stopped
 		@score.decreaseFor @currentPlayer
 		@currentRound.each (player) =>
-			player.playerLost @currentPlayer, reason
+			player.playerLost [@currentPlayer], reason
 		@broadcastScore()
 
 	lastPlayerLoses: (reason) ->
 	
-	everybodyButTheCurrentPlayerLoses: ->
+	everybodyButTheCurrentPlayerLoses: (reason) ->
+		losingPlayers = @currentRound.collect (player) => player isnt @currentPlayer
+		for player in losingPlayers
+			@score.decreaseFor player
+		@currentRound.each (player) ->
+			player.playerLost losingPlayers, reason
 
 	broadcastScore: ->
 		allScores = @score.all()
