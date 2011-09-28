@@ -148,10 +148,11 @@ class MiaGame
 
 	showDice: ->
 		return if @stopped
-		@broadcastActualDice()
 		if not @actualDice?
 			@currentPlayerLoses 'wanted to see dice before the first roll'
-		else if @announcedDice.isHigherThan @actualDice
+			return
+		@broadcastActualDice()
+		if @announcedDice.isHigherThan @actualDice
 			@lastPlayerLoses 'was caught bluffing'
 		else
 			@currentPlayerLoses 'saw that the announcement was true'

@@ -440,6 +440,8 @@ describe 'Mia Game', ->
 
 		it 'should broadcast actual dice', ->
 			spyOn miaGame, 'broadcastActualDice'
+			miaGame.actualDice = dice.create(3, 1)
+			miaGame.announcedDice = dice.create(3,2)
 			miaGame.showDice()
 			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
 
@@ -447,6 +449,11 @@ describe 'Mia Game', ->
 			miaGame.showDice()
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wanted to see dice before the first roll'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
+
+		it 'should not try to broadcast actual dice when no dice are available', ->
+			spyOn miaGame, 'broadcastActualDice'
+			miaGame.showDice()
+			expect(miaGame.broadcastActualDice).not.toHaveBeenCalled()
 
 		it 'should make last player lose when actualDice are lower than announcedDice', ->
 			miaGame.actualDice = dice.create 3, 1
