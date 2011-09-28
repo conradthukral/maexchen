@@ -502,6 +502,7 @@ describe 'Mia Game', ->
 			registerPlayers 1, 2, 3
 			miaGame.currentRound.add player1
 			miaGame.currentRound.add player2
+			spyOn miaGame, 'newRound'
 
 		it 'should decrease the score', ->
 			spyOn miaGame.score, 'decreaseFor'
@@ -530,6 +531,10 @@ describe 'Mia Game', ->
 			spyOn miaGame, 'broadcastScore'
 			miaGame.playersLose [player1], 'aReason'
 			expect(miaGame.broadcastScore).toHaveBeenCalled()
+
+		it 'should start the next round', ->
+			miaGame.playersLose [player1], 'aReason'
+			expect(miaGame.newRound).toHaveBeenCalled()
 
 	describe 'broadcast score', ->
 

@@ -162,6 +162,7 @@ class MiaGame
 		@currentRound.each (player) ->
 			player.playerLost losingPlayers, reason
 		@broadcastScore()
+		@newRound()
 
 	broadcastScore: ->
 		allScores = @score.all()

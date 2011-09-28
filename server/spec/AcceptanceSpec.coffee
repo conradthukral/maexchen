@@ -91,18 +91,7 @@ describe 'the Mia server', ->
 			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
 			eachPlayer.receivesScores client1: 1, client2: 0
 
-		it 'should make client1 lose, because she wants to see before the first roll', ->
-			eachPlayer.receivesOfferToJoinRound()
-			eachPlayer.joinsRound()
-			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
-			
-			client1.isAskedToPlayATurn()
-			client1.wantsToSee()
-			
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wanted to see dice before the first roll'
-			eachPlayer.receivesScores client1: 0, client2: 1
-
-		it 'should make client1 lose, because she announced incorrectly', ->
+		it 'should host a round with a player calling and winning', ->
 			eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
 			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
@@ -121,6 +110,20 @@ describe 'the Mia server', ->
 			eachPlayer.receivesActualDice dice.create(4, 4)
 			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'was caught bluffing'
 			eachPlayer.receivesScores client1: 0, client2: 1
+
+		player1LosesARound = () ->
+			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.joinsRound()
+			client1.isAskedToPlayATurn()
+			client1.wantsToSee()
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wanted to see dice before the first roll'
+
+		it 'should keep score across multiple rounds', ->
+			player1LosesARound()
+			eachPlayer.receivesScores client1: 0, client2: 1
+
+			player1LosesARound()
+			eachPlayer.receivesScores client1: 0, client2: 2
 
 
 	describe 'mia rules', ->
