@@ -9,11 +9,11 @@ public class ThrottlingRoundListener implements RoundListener {
 		this.decorated = decorated;
 	}
 
-	public void roundCompleted(String completeRound) {
+	public void roundCompleted(int roundNumber, String completeRound) {
 		long now = System.currentTimeMillis();
 		if (now > lastTimestamp + 10000) {
 			lastTimestamp = now;
-			decorated.roundCompleted(completeRound);
+			decorated.roundCompleted(roundNumber, completeRound);
 		}
 	}
 

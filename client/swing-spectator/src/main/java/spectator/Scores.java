@@ -12,6 +12,9 @@ public class Scores {
 	public static Scores parse(String message) {
 		Scores result = new Scores();
 		String scoresPart = message.substring(message.indexOf(';') + 1);
+		if (scoresPart.isEmpty()) {
+			return result;
+		}
 		String[] playerScores = scoresPart.split(",");
 		for (String playerScore : playerScores) {
 			int index = playerScore.indexOf(':');

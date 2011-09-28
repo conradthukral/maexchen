@@ -2,6 +2,6 @@ package spectator;
 
 public interface RoundListener {
 
-	void roundCompleted(String completeRound);
+	void roundCompleted(int roundNumber, String completeRound);
 
 }

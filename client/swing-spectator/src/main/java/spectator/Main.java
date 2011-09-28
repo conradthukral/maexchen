@@ -11,8 +11,8 @@ public class Main {
 		final SpectatorApplication window = new SpectatorApplication();
 
 		RoundListener roundListener = new ThrottlingRoundListener(new RoundListener() {
-			public void roundCompleted(String completeRound) {
-				window.setRoundDescription(completeRound);
+			public void roundCompleted(int roundNumber, String completeRound) {
+				window.updateRoundData(roundNumber, completeRound);
 			}
 		});
 		

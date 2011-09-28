@@ -4,24 +4,26 @@ import udphelper.MessageListener;
 
 public class DataCollector implements MessageListener {
 
-	private StringBuilder currentRound = new StringBuilder();
-	
 	private final RoundListener roundListener;
 	private final ScoreListener scoreListener;
-	
+
+	private StringBuilder currentRound = new StringBuilder();
+	private int currentRoundNumber;
+
 	public DataCollector(RoundListener roundListener, ScoreListener scoreListener) {
 		this.roundListener = roundListener;
 		this.scoreListener = scoreListener;
 	}
 
 	public void onMessage(String message) {
-		if (message.startsWith("ROUND STARTED")) {
+		String[] parts = message.split(";");
+		if (parts[0].equals("ROUND STARTING")) {
+			currentRoundNumber = Integer.parseInt(parts[1]);
 			currentRound.setLength(0);
-			currentRound.append(message).append("\n");
-		} else if (message.startsWith("PLAYER LOST")) {
+		} else if (parts[0].equals("PLAYER LOST")) {
 			currentRound.append(message);
-			roundListener.roundCompleted(currentRound.toString());
-		} else if (message.startsWith("SCORE")) {
+			roundListener.roundCompleted(currentRoundNumber, currentRound.toString());
+		} else if (parts[0].equals("SCORE")) {
 			handleScores(message);
 		} else {
 			currentRound.append(message).append("\n");
