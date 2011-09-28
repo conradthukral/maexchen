@@ -358,9 +358,11 @@ describe 'Mia Game', ->
 			expect(miaGame.nextTurn).toHaveBeenCalled()
 
 		it 'should broadcast mia, when she announces mia correctly', ->
+			spyOn miaGame, 'broadcastAnnouncedDice'
 			spyOn miaGame, 'broadcastActualDice'
 			miaGame.actualDice = dice.create 2, 1
 			miaGame.announce(dice.create 1, 2)
+			expect(miaGame.broadcastAnnouncedDice).toHaveBeenCalledWith dice.create(2, 1)
 			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
 
 		it 'should make everybody but the current player lose on mia', ->
@@ -373,6 +375,14 @@ describe 'Mia Game', ->
 			miaGame.actualDice = dice.create 2, 2
 			miaGame.announce(dice.create 1, 2)
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wrongly announced mia'
+
+		it 'should broadcast dice when whe announces mia wrongly', ->
+			spyOn miaGame, 'broadcastAnnouncedDice'
+			spyOn miaGame, 'broadcastActualDice'
+			miaGame.actualDice = dice.create(3, 1)
+			miaGame.announce dice.create(2, 1)
+			expect(miaGame.broadcastAnnouncedDice).toHaveBeenCalledWith dice.create(2, 1)
+			expect(miaGame.broadcastActualDice).toHaveBeenCalled()
 
 		it 'should do nothing if the game is stopped', ->
 			spyOn miaGame, 'nextTurn'
@@ -503,6 +513,12 @@ describe 'Mia Game', ->
 			expect(player1.playerLost).toHaveBeenCalledWith [player2, player3], 'aReason'
 			expect(player2.playerLost).toHaveBeenCalledWith [player2, player3], 'aReason'
 			expect(player3.playerLost).toHaveBeenCalledWith [player2, player3], 'aReason'
+
+		it 'should broadcast the score of all players to all players', ->
+			spyOn miaGame, 'broadcastScore'
+			miaGame.currentPlayer = player1
+			miaGame.everybodyButTheCurrentPlayerLoses 'aReason'
+			expect(miaGame.broadcastScore).toHaveBeenCalled()
 
 	describe 'broadcast score', ->
 

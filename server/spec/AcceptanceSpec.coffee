@@ -11,6 +11,9 @@ setupFakeClient = (clientName) ->
 	result.sendPlayerRegistration()
 	result.receivesRegistrationConfirmation()
 	result
+		
+keepServerFromPermutingThePlayers = ->
+	server.game.permuteCurrentRound = ->
 
 describe 'the Mia server', ->
 
@@ -53,12 +56,8 @@ describe 'the Mia server', ->
 	
 	describe 'with two registered players', ->
 
-		client1 = null
-		client2 = null
+		client1 = client2 = null
 		eachPlayer = null
-
-		keepServerFromPermutingThePlayers = ->
-			server.game.permuteCurrentRound = ->
 
 		beforeEach ->
 			keepServerFromPermutingThePlayers()
@@ -69,10 +68,9 @@ describe 'the Mia server', ->
 			runs -> server.startGame()
 
 		afterEach ->
-			client1.shutDown()
-			client2.shutDown()
+			eachPlayer.shutDown()
 
-		it 'should play a round', =>
+		it 'should host a round with a player calling and losing', =>
 			eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
 			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
@@ -90,6 +88,52 @@ describe 'the Mia server', ->
 			eachPlayer.receivesActualDice dice.create(6, 6)
 			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
 			eachPlayer.receivesScores client1: 1, client2: 0
+
+	describe 'mia rules', ->
+
+		client1 = client2 = client3 = null
+		eachPlayer = null
+
+		beforeEach ->
+			keepServerFromPermutingThePlayers()
+			client1 = setupFakeClient 'client1'
+			client2 = setupFakeClient 'client2'
+			client3 = setupFakeClient 'client3'
+			eachPlayer = new MultipleClients [client1, client2, client3]
+			runs -> server.startGame()
+
+		afterEach ->
+			eachPlayer.shutDown()
+
+		it 'when mia is announced, all other players immediately lose', ->
+			server.setDiceRoller new FakeDiceRoller dice.create(2, 1)
+			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.joinsRound()
+			
+			client1.isAskedToPlayATurn()
+			client1.rolls()
+			client1.receivesRolledDice dice.create(2, 1)
+			client1.announcesDice dice.create(2, 1)
+
+			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
+			eachPlayer.receivesActualDice dice.create(2, 1)
+			eachPlayer.receivesNotificationThatPlayersLost ['client2', 'client3'], 'mia'
+			eachPlayer.receivesScores client1: 1, client2: 0, client3: 0
+
+		it 'when mia is announced wrongly, player immediately loses', ->
+			server.setDiceRoller new FakeDiceRoller dice.create(3, 1)
+			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.joinsRound()
+			
+			client1.isAskedToPlayATurn()
+			client1.rolls()
+			client1.receivesRolledDice dice.create(3, 1)
+			client1.announcesDice dice.create(2, 1)
+
+			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
+			eachPlayer.receivesActualDice dice.create(3, 1)
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wrongly announced mia'
+			eachPlayer.receivesScores client1: 0, client2: 1, client3: 1
 
 class MultipleClients
 	constructor: (clients) ->
@@ -159,6 +203,9 @@ class FakeClient
 	receivesActualDice: (dice) ->
 		@receives "ACTUAL DICE;#{dice}"
 	
+	receivesNotificationThatPlayersLost: (players, reason) ->
+		@receivesNotificationThatPlayerLost players.join(), reason
+
 	receivesNotificationThatPlayerLost: (playerName, reason) ->
 		@receives "PLAYER LOST;#{playerName};#{reason}"
 

@@ -128,8 +128,8 @@ class MiaGame
 			player.announcedDiceBy dice, @currentPlayer
 
 	miaIsAnnounced: ->
+		@broadcastActualDice()
 		if @actualDice.isMia()
-			@broadcastActualDice()
 			@everybodyButTheCurrentPlayerLoses 'mia'
 		else
 			@currentPlayerLoses 'wrongly announced mia'
@@ -163,6 +163,7 @@ class MiaGame
 			@score.decreaseFor player
 		@currentRound.each (player) ->
 			player.playerLost losingPlayers, reason
+		@broadcastScore()
 
 	broadcastScore: ->
 		allScores = @score.all()
