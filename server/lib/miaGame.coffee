@@ -60,9 +60,7 @@ class MiaGame
 		expirer = @startExpirer =>
 			return if @stopped
 			if round.isEmpty()
-				@players.each (player) ->
-					player.roundCanceled 'no players'
-				@newRound()
+				@cancelRound 'no players'
 			else
 				@startRound()
 
@@ -81,7 +79,16 @@ class MiaGame
 		@currentRound.each (player) =>
 			@score.increaseFor player
 			player.roundStarted @currentRound.players
-		@nextTurn()
+		if @currentRound.size() > 1
+			@nextTurn()
+		else
+			@cancelRound 'only one player'
+	
+	cancelRound: (reason) ->
+		@players.each (player) ->
+			player.roundCanceled reason
+		@broadcastScore()
+		@newRound()
 
 	permuteCurrentRound: -> @currentRound.permute()
 

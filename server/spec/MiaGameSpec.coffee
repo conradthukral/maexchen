@@ -124,32 +124,17 @@ describe 'Mia Game', ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 			waitsFor (-> miaGame.startRound.wasCalled), 30
 			
-		it 'should notify players when nobody joins', ->
-			spyOn player1, 'roundCanceled'
-			spyOn player2, 'roundCanceled'
+		it 'should cancel the round when nobody joins', ->
+			spyOn miaGame, 'cancelRound'
+			spyOn miaGame, 'startRound'
 			miaGame.setBroadcastTimeout 20
 			runs ->
 				miaGame.newRound()
-			waitsFor (-> player1.roundCanceled.wasCalled), 40
+			waitsFor (-> miaGame.cancelRound.wasCalled), 40
 			runs ->
-				expect(player1.roundCanceled).toHaveBeenCalledWith 'no players'
-				expect(player2.roundCanceled).toHaveBeenCalledWith 'no players'
+				expect(miaGame.cancelRound).toHaveBeenCalledWith 'no players'
+				expect(miaGame.startRound).not.toHaveBeenCalled()
 
-		it 'should not start round, but call newRound(), if nobody joined', ->
-			spyOn miaGame, 'startRound'
-			spyOn(miaGame, 'newRound').andCallThrough()
-			miaGame.setBroadcastTimeout 50
-			runs ->
-				miaGame.newRound()
-			waits 30
-			runs ->
-				expect(miaGame.newRound.callCount).toBe 1
-				expect(miaGame.startRound).not.toHaveBeenCalled()
-			waits 40
-			runs ->
-				expect(miaGame.startRound).not.toHaveBeenCalled()
-				expect(miaGame.newRound.callCount).toBe 2
-		
 		it 'should not start a round after the game is stopped', ->
 			spyOn miaGame, 'startRound'
 			miaGame.setBroadcastTimeout 20
@@ -182,6 +167,8 @@ describe 'Mia Game', ->
 
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'
+			miaGame.currentRound.add player1
+			miaGame.currentRound.add player2
 			miaGame.startRound()
 			expect(miaGame.nextTurn).toHaveBeenCalled()
 
@@ -204,7 +191,39 @@ describe 'Mia Game', ->
 			expect(miaGame.score.increaseFor).toHaveBeenCalledWith player1
 			expect(miaGame.score.increaseFor).not.toHaveBeenCalledWith player2
 
+		it 'should immediately cancel rounds with only a single player', ->
+			registerPlayers 1
+			spyOn miaGame, 'cancelRound'
+			spyOn miaGame, 'nextTurn'
+			miaGame.currentRound.add player1
+			miaGame.startRound()
+			expect(miaGame.cancelRound).toHaveBeenCalledWith 'only one player'
+			expect(miaGame.nextTurn).not.toHaveBeenCalled()
+
+	describe 'cancel round', ->
+
+		beforeEach ->
+			registerPlayers 1, 2
+
+		it 'should notify players', ->
+			spyOn player1, 'roundCanceled'
+			spyOn player2, 'roundCanceled'
+			miaGame.cancelRound 'theReason'
+			expect(player1.roundCanceled).toHaveBeenCalledWith 'theReason'
+			expect(player2.roundCanceled).toHaveBeenCalledWith 'theReason'
+
+		it 'should broadcast the score', ->
+			spyOn miaGame, 'broadcastScore'
+			miaGame.cancelRound()
+			expect(miaGame.broadcastScore).toHaveBeenCalled()
+
+		it 'should call new round', ->
+			spyOn miaGame, 'newRound'
+			miaGame.cancelRound()
+			expect(miaGame.newRound).toHaveBeenCalled()
+
 	describe 'next turn', ->
+
 		beforeEach ->
 			registerPlayers 1, 2, 3
 			miaGame.currentRound.add player1

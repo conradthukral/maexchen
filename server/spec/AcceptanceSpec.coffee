@@ -50,10 +50,30 @@ describe 'the Mia server', ->
 
 		it 'should keep trying to start a round while nobody joins', ->
 			client.receivesOfferToJoinRound()
-			client.receivesNotificationThatNobodyWantedToJoin()
-			
+			client.receivesNotificationThatRoundWasCanceled 'no players'
+
 			client.receivesOfferToJoinRound()
 	
+	describe 'when only one player participates in a round', ->
+
+		player = null
+
+		beforeEach ->
+			player = setupFakeClient 'thePlayer'
+			runs -> server.startGame()
+
+		afterEach ->
+			player.shutDown()
+
+		it 'should award the player a point without playing the round', ->
+			player.receivesOfferToJoinRound()
+			player.joinsRound()
+			player.receivesNotificationThatRoundIsStarting 'thePlayer'
+			player.receivesNotificationThatRoundWasCanceled 'only one player'
+			player.receivesScores thePlayer: 1
+			
+			player.receivesOfferToJoinRound()
+
 	describe 'with two registered players', ->
 
 		client1 = client2 = null
@@ -210,8 +230,8 @@ class FakeClient
 	joinsRoundWithToken: (token) ->
 		@send "JOIN;#{token}"
 
-	receivesNotificationThatNobodyWantedToJoin: ->
-		@receives 'ROUND CANCELED;no players'
+	receivesNotificationThatRoundWasCanceled: (reason) ->
+		@receives "ROUND CANCELED;#{reason}"
 
 	receivesNotificationThatRoundIsStarting: (playernames...) ->
 		@receives "ROUND STARTED;#{playernames.join()}"
