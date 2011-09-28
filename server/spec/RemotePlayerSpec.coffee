@@ -125,8 +125,11 @@ describe "remotePlayer", ->
 			player.currentScore scores
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'SCORE;player1:23,player2:42'
 
-		it 'should send message when registered successfully', ->
+		it 'should send REGISTERED notifications', ->
 			player.registered()
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REGISTERED'
 
+		it 'should send REJECTED notifications', ->
+			player.registrationRejected()
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REJECTED'
 
