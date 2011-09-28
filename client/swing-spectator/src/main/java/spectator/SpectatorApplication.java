@@ -2,19 +2,20 @@ package spectator;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
-import java.util.List;
+import java.awt.Font;
 
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextPane;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 public class SpectatorApplication {
 
 	private JFrame frmMxchen;
-	private JTable table;
 	private JTextPane textPane;
+	private JScrollPane scrollPane;
+	private JTable table;
 
 	/**
 	 * Create the application.
@@ -33,17 +34,25 @@ public class SpectatorApplication {
 	private void initialize() {
 		frmMxchen = new JFrame();
 		frmMxchen.setTitle("Mäxchen!");
-		frmMxchen.setBounds(100, 100, 556, 439);
+		frmMxchen.setSize(800, 600);
 		frmMxchen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		textPane = new JTextPane();
+		textPane.setFont(new Font("Arial", Font.PLAIN, 18));
 		frmMxchen.getContentPane().add(textPane, BorderLayout.CENTER);
 		textPane.setEditable(false);
 		textPane.setText("Text");
 		
 		table = new JTable();
-		frmMxchen.getContentPane().add(table, BorderLayout.EAST);
-		table.setModel(createScoreModel(new Scores()));
+		table.setFont(new Font("Arial", Font.PLAIN, 18));
+		table.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 18));
+		table.setRowHeight(25);
+		table.setRowSelectionAllowed(false);
+		table.setFillsViewportHeight(true);
+
+		scrollPane = new JScrollPane(table);
+		scrollPane.setViewportBorder(null);
+		frmMxchen.getContentPane().add(scrollPane, BorderLayout.EAST);
 	}
 
 	private TableModel createScoreModel(Scores scores) {
