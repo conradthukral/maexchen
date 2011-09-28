@@ -51,6 +51,7 @@ class MiaGame
 		@currentPlayer = null
 		@lastPlayer = null
 		@score = require('./score').create()
+		@roundNumber = 0
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
@@ -59,6 +60,7 @@ class MiaGame
 
 	newRound: ->
 		return if @stopped
+		@roundNumber++
 		@currentRound = round = new PlayerList
 		expirer = @startExpirer =>
 			return if @stopped
@@ -73,7 +75,7 @@ class MiaGame
 				if round.size() == @players.size()
 					expirer.cancelExpireActions()
 					@startRound()
-			player.willJoinRound expirer.makeExpiring(answerJoining)
+			player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)
 
 	startRound: ->
 		@permuteCurrentRound()

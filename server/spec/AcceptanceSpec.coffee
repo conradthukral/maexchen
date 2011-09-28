@@ -51,10 +51,10 @@ describe 'the Mia server', ->
 			client.shutDown()
 
 		it 'should keep trying to start a round while nobody joins', ->
-			client.receivesOfferToJoinRound()
+			client.receivesOfferToJoinRound 1
 			client.receivesNotificationThatRoundWasCanceled 'no players'
 
-			client.receivesOfferToJoinRound()
+			client.receivesOfferToJoinRound 2
 	
 	describe 'when only one player participates in a round', ->
 
@@ -68,13 +68,13 @@ describe 'the Mia server', ->
 			player.shutDown()
 
 		it 'should award the player a point without playing the round', ->
-			player.receivesOfferToJoinRound()
+			player.receivesOfferToJoinRound 1
 			player.joinsRound()
 			player.receivesNotificationThatRoundIsStarting 'thePlayer'
 			player.receivesNotificationThatRoundWasCanceled 'only one player'
 			player.receivesScores thePlayer: 1
 			
-			player.receivesOfferToJoinRound()
+			player.receivesOfferToJoinRound 2
 
 	describe 'previously registered player registers again', ->
 
@@ -101,19 +101,19 @@ describe 'the Mia server', ->
 			player2.wantsToSee()
 
 		it 'should allow the new player to take the place of the old player in the next round, keeping the score', ->
-			otherPlayer.receivesOfferToJoinRound()
+			otherPlayer.receivesOfferToJoinRound 1
 			otherPlayer.joinsRound()
 
-			oldPlayer.receivesOfferToJoinRound()
+			oldPlayer.receivesOfferToJoinRound 1
 			oldPlayer.joinsRound()
 
 			newPlayer = setupFakeClient 'thePlayer'
 
 			playRound otherPlayer, oldPlayer
 
-			otherPlayer.receivesOfferToJoinRound()
+			otherPlayer.receivesOfferToJoinRound 2
 			otherPlayer.joinsRound()
-			newPlayer.receivesOfferToJoinRound()
+			newPlayer.receivesOfferToJoinRound 2
 			newPlayer.joinsRound()
 
 			playRound otherPlayer, newPlayer
@@ -136,7 +136,7 @@ describe 'the Mia server', ->
 			eachPlayer.shutDown()
 
 		it 'should host a round with a player calling and losing', =>
-			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
 			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
 			
@@ -156,7 +156,7 @@ describe 'the Mia server', ->
 			eachPlayer.receivesScores client1: 1, client2: 0
 
 		it 'should host a round with a player calling and winning', ->
-			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
 			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
 			
@@ -175,20 +175,19 @@ describe 'the Mia server', ->
 			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'was caught bluffing'
 			eachPlayer.receivesScores client1: 0, client2: 1
 
-		player1LosesARound = () ->
-			eachPlayer.receivesOfferToJoinRound()
+		player1LosesRound = (roundNumber) ->
+			eachPlayer.receivesOfferToJoinRound roundNumber
 			eachPlayer.joinsRound()
 			client1.isAskedToPlayATurn()
 			client1.wantsToSee()
 			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wanted to see dice before the first roll'
 
 		it 'should keep score across multiple rounds', ->
-			player1LosesARound()
+			player1LosesRound 1
 			eachPlayer.receivesScores client1: 0, client2: 1
 
-			player1LosesARound()
+			player1LosesRound 2
 			eachPlayer.receivesScores client1: 0, client2: 2
-
 
 	describe 'mia rules', ->
 
@@ -208,7 +207,7 @@ describe 'the Mia server', ->
 
 		it 'when mia is announced, all other players immediately lose', ->
 			server.setDiceRoller new FakeDiceRoller dice.create(2, 1)
-			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
 			
 			client1.isAskedToPlayATurn()
@@ -223,7 +222,7 @@ describe 'the Mia server', ->
 
 		it 'when mia is announced wrongly, player immediately loses', ->
 			server.setDiceRoller new FakeDiceRoller dice.create(3, 1)
-			eachPlayer.receivesOfferToJoinRound()
+			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
 			
 			client1.isAskedToPlayATurn()
@@ -264,8 +263,8 @@ class FakeClient
 	receivesRegistrationConfirmation: ->
 		@receives 'REGISTERED'
 
-	receivesOfferToJoinRound: ->
-		@receivesWithAppendedToken 'ROUND STARTING'
+	receivesOfferToJoinRound: (roundNumber) ->
+		@receivesWithAppendedToken "ROUND STARTING;#{roundNumber}"
 	
 	joinsRound: ->
 		runs =>

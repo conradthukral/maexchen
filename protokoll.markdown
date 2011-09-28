@@ -26,7 +26,7 @@ Anmelden
   
 Start einer Spielrunde
 -----------------------
-- server->clients: ROUND STARTING;token
+- server->clients: ROUND STARTING;rundennummer;token
 - client->server: JOIN;token
 
 Falls mindestens ein Spieler teilnehmen will:

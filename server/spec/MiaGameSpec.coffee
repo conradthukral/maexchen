@@ -15,8 +15,8 @@ dice = require '../lib/dice'
 
 describe 'Mia Game', ->
 	miaGame = player1 = player2 = player3 = player4 = registerPlayers = null
-	accept = (question) -> question(true)
-	deny = (question) -> question(false)
+	accept = (roundNumber, question) -> question(true)
+	deny = (roundNumber, question) -> question(false)
 	roll = (question) -> question(mia.Messages.ROLL)
 	see = (question) -> question(mia.Messages.SEE)
 	garbage = (question) -> question('GARBAGE')
@@ -74,6 +74,7 @@ describe 'Mia Game', ->
 			miaGame.newRound()
 			expect(player1.willJoinRound).toHaveBeenCalled()
 			expect(player2.willJoinRound).toHaveBeenCalled()
+			expect(player1.willJoinRound.mostRecentCall.args[0]).toBe miaGame.roundNumber
 
 		it 'should have player for current round when she wants to', ->
 			player1.willJoinRound = accept
@@ -91,7 +92,7 @@ describe 'Mia Game', ->
 		it 'should not accept joins for the current round after timeout', ->
 			miaGame.setBroadcastTimeout 20
 			runs ->
-				player1.willJoinRound = (joinRound) ->
+				player1.willJoinRound = (roundNumber, joinRound) ->
 					setTimeout (-> joinRound(true)), 40
 				miaGame.newRound()
 			waits 60
@@ -101,7 +102,7 @@ describe 'Mia Game', ->
 		it 'should not have joins for first round in second round', ->
 			firstRound = secondRound = null
 			runs ->
-				player1.willJoinRound = (joinRound) ->
+				player1.willJoinRound = (roundNumber, joinRound) ->
 					setTimeout (-> joinRound(true)), 40
 				miaGame.newRound()
 				firstRound = miaGame.currentRound
@@ -156,6 +157,15 @@ describe 'Mia Game', ->
 			runs ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 
+		it 'should set the round number to 1 for the first round', ->
+			miaGame.newRound()
+			expect(miaGame.roundNumber).toBe 1
+		
+		it 'should increment the round number', ->
+			miaGame.roundNumber = 41
+			miaGame.newRound()
+			expect(miaGame.roundNumber).toBe 42
+
 	describe 'start round', ->
 
 		it 'should permute the current round when starting a new round', ->
@@ -170,7 +180,6 @@ describe 'Mia Game', ->
 			spyOn player2, 'roundStarted'
 			miaGame.currentRound.add player1
 			miaGame.startRound()
-			
 			expect(player1.roundStarted).toHaveBeenCalledWith [player1]
 			expect(player2.roundStarted).toHaveBeenCalledWith [player1]
 
