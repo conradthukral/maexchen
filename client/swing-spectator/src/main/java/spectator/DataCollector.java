@@ -38,7 +38,7 @@ public class DataCollector implements MessageListener {
 		} else if (messageParts[0].equals("ANNOUNCED")) {
 			String player = messageParts[1];
 			String dice = formatDice(messageParts[2]);
-			formatted = player + " würfelt und sagt: " + dice;
+			formatted = player + " sagt an: " + dice;
 		} else if (messageParts[0].equals("PLAYER LOST")) {
 			String[] players = messageParts[1].split(",");
 			String reason = messageParts[2];
@@ -46,6 +46,12 @@ public class DataCollector implements MessageListener {
 		} else if (messageParts[0].equals("ACTUAL DICE")) {
 			String dice = formatDice(messageParts[1]);
 			formatted = "Die Würfel werden aufgedeckt: " + dice;
+		} else if (messageParts[0].equals("PLAYER ROLLS")) {
+			String player = messageParts[1];
+			formatted = player + " würfelt...";
+		} else if (messageParts[0].equals("PLAYER WANTS TO SEE")) {
+			String player = messageParts[1];
+			formatted = player + " will sehen!";
 		}
 		if (formatted != null) {
 			currentRound.append(formatted);

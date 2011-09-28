@@ -9,6 +9,8 @@ class PlayerStub
 	actualDice: ->
 	playerLost: ->
 	currentScore: ->
+	playerRolls: ->
+	playerWantsToSee: ->
 
 mia = require '../lib/miaGame'
 dice = require '../lib/dice'
@@ -318,7 +320,7 @@ describe 'Mia Game', ->
 			roll: -> 'theDice'
 
 		beforeEach ->
-			miaGame.registerPlayer player1
+			registerPlayers 1, 2
 			miaGame.currentPlayer = player1
 			miaGame.setDiceRoller diceRoller
 			miaGame.setBroadcastTimeout 20
@@ -334,6 +336,13 @@ describe 'Mia Game', ->
 			miaGame.rollDice()
 			expect(miaGame.actualDice).toBe 'theDice'
 
+		it 'should broadcast the decision to roll to all players', ->
+			spyOn player1, 'playerRolls'
+			spyOn player2, 'playerRolls'
+			miaGame.rollDice()
+			expect(player1.playerRolls).toHaveBeenCalledWith player1
+			expect(player2.playerRolls).toHaveBeenCalledWith player1
+			
 		it 'should call announce with the announced dice', ->
 			spyOn miaGame, 'announce'
 			player1.yourRoll = (dice, announce) -> announce 'announcedDice'
@@ -435,9 +444,17 @@ describe 'Mia Game', ->
 
 	describe 'when player wants to see', ->
 		beforeEach ->
+			registerPlayers 1, 2
 			spyOn miaGame, 'currentPlayerLoses'
 			spyOn miaGame, 'lastPlayerLoses'
 
+		it 'should broadcast the decision to see to all players', ->
+			spyOn player1, 'playerWantsToSee'
+			spyOn player2, 'playerWantsToSee'
+			miaGame.currentPlayer = player1
+			miaGame.showDice()
+			expect(player1.playerWantsToSee).toHaveBeenCalledWith player1
+			expect(player2.playerWantsToSee).toHaveBeenCalledWith player1
 		it 'should broadcast actual dice', ->
 			spyOn miaGame, 'broadcastActualDice'
 			miaGame.actualDice = dice.create(3, 1)

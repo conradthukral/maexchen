@@ -110,7 +110,17 @@ describe "remotePlayer", ->
 			player.roundStarted [player1, player2]
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTED;player1,player2'
 
-		it 'should send ACTUAL DICE notifications', ->
+		it 'should send PLAYER ROLLS notifications', ->
+			rollingPlayer = name: 'rollingPlayer'
+			player.playerRolls rollingPlayer
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'PLAYER ROLLS;rollingPlayer'
+
+		it 'should send PLAYER WANTS TO SEE notifications', ->
+			seeingPlayer = name: 'seeingPlayer'
+			player.playerWantsToSee seeingPlayer
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'PLAYER WANTS TO SEE;seeingPlayer'
+
+	it 'should send ACTUAL DICE notifications', ->
 			player.actualDice dice.create(3, 2)
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ACTUAL DICE;3,2'
 

@@ -45,6 +45,7 @@ Reihum:
   wobei command eins der folgenden ist: ROLL, SEE(?)
   
 Bei ROLL:
+- server->clients: PLAYER ROLLS;name
 - server->client: ROLLED;dice;token
 - client->server: ANNOUNCE;dice';token
 - server->clients: ANNOUNCED;name;dice
@@ -54,6 +55,7 @@ Falls Mäxchen angesagt wurde, wird sofort aufgedeckt. Wenn tatsächlich Mäxche
 
 Bei SEE:
 Server überprüft, ob zuletzt angesagte Würfel okay sind
+- server->clients: PLAYER WANTS TO SEE;name
 - server->clients: ACTUAL DICE;dice
 - server->clients: PLAYER LOST;name;reason
 

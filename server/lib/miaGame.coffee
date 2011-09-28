@@ -114,6 +114,8 @@ class MiaGame
 
 	rollDice: ->
 		return if @stopped
+		@players.each (player) =>
+			player.playerRolls @currentPlayer
 		@actualDice = dice = @diceRoller.roll()
 
 		expirer = @startExpirer (=> @currentPlayerLoses 'failed to announce dice'), true
@@ -148,6 +150,8 @@ class MiaGame
 
 	showDice: ->
 		return if @stopped
+		@players.each (player) =>
+			player.playerWantsToSee @currentPlayer
 		if not @actualDice?
 			@currentPlayerLoses 'wanted to see dice before the first roll'
 			return

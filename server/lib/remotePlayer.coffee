@@ -60,6 +60,12 @@ class RemotePlayer
 		@changeState new WaitingForTurnState(token, callback, @changeState)
 		@sendMessage "YOUR TURN;#{token}"
 
+	playerRolls: (player) ->
+		@sendMessage "PLAYER ROLLS;#{player.name}"
+	
+	playerWantsToSee: (player) ->
+		@sendMessage "PLAYER WANTS TO SEE;#{player.name}"
+
 	yourRoll: (dice, callback) ->
 		token = @generateToken()
 		@changeState new WaitingForAnnounceState(token, callback, @changeState)

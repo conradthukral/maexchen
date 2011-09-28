@@ -142,6 +142,7 @@ describe 'the Mia server', ->
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
+			eachPlayer.receivesNotificationThatPlayerRolls 'client1'
 			server.rolls 6, 6
 			client1.receivesRolledDice dice.create(6, 6)
 			client1.announcesDice dice.create(6, 6)
@@ -151,6 +152,7 @@ describe 'the Mia server', ->
 			client2.isAskedToPlayATurn()
 			client2.wantsToSee()
 
+			eachPlayer.receivesNotificationThatPlayerWantsToSee 'client2'
 			eachPlayer.receivesActualDice dice.create(6, 6)
 			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
 			eachPlayer.receivesScores client1: 1, client2: 0
@@ -303,6 +305,12 @@ class FakeClient
 	receivesActualDice: (dice) ->
 		@receives "ACTUAL DICE;#{dice}"
 	
+	receivesNotificationThatPlayerRolls: (player) ->
+		@receives "PLAYER ROLLS;#{player}"
+	
+	receivesNotificationThatPlayerWantsToSee: (player) ->
+		@receives "PLAYER WANTS TO SEE;#{player}"
+
 	receivesNotificationThatPlayersLost: (players, reason) ->
 		@receivesNotificationThatPlayerLost players.join(), reason
 
