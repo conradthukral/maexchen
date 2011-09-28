@@ -66,3 +66,15 @@ Nach Ende einer Runde:
 - server->clients: SCORE;spielerpunkte*
   wobei spielerpunkte eine kommagetrennte Liste von Einträgen in der Form name:punkte ist und für jeden Spieler einen Eintrag enthält
 
+Reason-Codes
+------------
+SEE_BEFORE_FIRST_ROLL: Spieler wollte sehen, war aber als erster am Zug (es gab also noch keine Ansage vorher)
+LIED_ABOUT_MIA: Spieler hat Mäxchen angesagt, ohne Mäxchen zu haben
+ANNOUNCED_LOSING_DICE: Spieler hat zu niedrige Würfel angesagt
+DID_NOT_ANNOUNCE: Spieler hat nicht (rechtzeitig) angesagt, was gewürfelt wurde
+DID_NOT_TAKE_TURN: Spieler hat nicht (rechtzeitig) einen Zug gemacht
+INVALID_TURN: Spieler hat einen ungültigen Zug gemacht
+SEE_FAILED: Spieler wollte sehen, Ansage des vorhergehenden Spielers war aber richtig
+CAUGHT_BLUFFING: Spieler hat mehr angesagt als er hatte, und der nachfolgende Spieler wollte sehen
+MIA: Es wurde Mäxchen aufgedeckt
+

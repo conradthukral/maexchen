@@ -154,7 +154,7 @@ describe 'the Mia server', ->
 
 			eachPlayer.receivesNotificationThatPlayerWantsToSee 'client2'
 			eachPlayer.receivesActualDice dice.create(6, 6)
-			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'saw that the announcement was true'
+			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'SEE_FAILED'
 			eachPlayer.receivesScores client1: 1, client2: 0
 
 		it 'should host a round with a player calling and winning', ->
@@ -174,7 +174,7 @@ describe 'the Mia server', ->
 			client2.wantsToSee()
 
 			eachPlayer.receivesActualDice dice.create(4, 4)
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'was caught bluffing'
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'CAUGHT_BLUFFING'
 			eachPlayer.receivesScores client1: 0, client2: 1
 
 		player1LosesRound = (roundNumber) ->
@@ -182,7 +182,7 @@ describe 'the Mia server', ->
 			eachPlayer.joinsRound()
 			client1.isAskedToPlayATurn()
 			client1.wantsToSee()
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wanted to see dice before the first roll'
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'SEE_BEFORE_FIRST_ROLL'
 
 		it 'should keep score across multiple rounds', ->
 			player1LosesRound 1
@@ -219,7 +219,7 @@ describe 'the Mia server', ->
 
 			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
 			eachPlayer.receivesActualDice dice.create(2, 1)
-			eachPlayer.receivesNotificationThatPlayersLost ['client2', 'client3'], 'mia'
+			eachPlayer.receivesNotificationThatPlayersLost ['client2', 'client3'], 'MIA'
 			eachPlayer.receivesScores client1: 1, client2: 0, client3: 0
 
 		it 'when mia is announced wrongly, player immediately loses', ->
@@ -234,7 +234,7 @@ describe 'the Mia server', ->
 
 			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
 			eachPlayer.receivesActualDice dice.create(3, 1)
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'wrongly announced mia'
+			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'LIED_ABOUT_MIA'
 			eachPlayer.receivesScores client1: 0, client2: 1, client3: 1
 
 class MultipleClients

@@ -1,9 +1,26 @@
 package spectator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import udphelper.MessageListener;
 
 public class DataCollector implements MessageListener {
 
+	private static final Map<String,String> REASON_TEXTS = new HashMap<String, String>();
+	
+	static {
+		REASON_TEXTS.put("SEE_BEFORE_FIRST_ROLL", "wollte als erster am Zug sehen");
+		REASON_TEXTS.put("LIED_ABOUT_MIA", "wer Mäxchen sagt, sollte Mäxchen haben");
+		REASON_TEXTS.put("ANNOUNCED_LOSING_DICE", "man muss schon mehr sagen als vorher angesagt war");
+		REASON_TEXTS.put("DID_NOT_ANNOUNCE", "hat nichts angesagt");
+		REASON_TEXTS.put("DID_NOT_TAKE_TURN", "hat keinen Spielzug gemacht");
+		REASON_TEXTS.put("INVALID_TURN", "wollte einen ungültigen Spielzug machen");
+		REASON_TEXTS.put("SEE_FAILED", "wollte sehen... aber doch nicht sowas!");
+		REASON_TEXTS.put("CAUGHT_BLUFFING", "hatte gehofft, dass das keiner überprüft");
+		REASON_TEXTS.put("MIA", "Mäxchen");
+	}
+	
 	private final RoundListener roundListener;
 	private final ScoreListener scoreListener;
 
@@ -41,7 +58,7 @@ public class DataCollector implements MessageListener {
 			formatted = player + " sagt an: " + dice;
 		} else if (messageParts[0].equals("PLAYER LOST")) {
 			String[] players = messageParts[1].split(",");
-			String reason = messageParts[2];
+			String reason = formatReason(messageParts[2]);
 			formatted = formatPlayerLost(players, reason);
 		} else if (messageParts[0].equals("ACTUAL DICE")) {
 			String dice = formatDice(messageParts[1]);
@@ -59,6 +76,12 @@ public class DataCollector implements MessageListener {
 			currentRound.append(messageParts[0]);
 		}
 		currentRound.append("\n");
+	}
+
+	private String formatReason(String reasonCode) {
+		String result = REASON_TEXTS.get(reasonCode);
+		if (result == null) result = reasonCode;
+		return result;
 	}
 
 	private String formatDice(String diceString) {
