@@ -20,11 +20,7 @@ class PlayerList
 		return if @isEmpty()
 		fn @players[0]
 
-	each: (fn) -> for player in @players
-		# "do" makes sure, that player is used with the current value
-		# not the last player from the loop
-		do (player) ->
-			fn player
+	each: (fn) -> @players.forEach(fn)
 	
 	collect: (predicate) ->
 		result = []
@@ -34,9 +30,11 @@ class PlayerList
 	nextPlayer: () ->
 		if @currentPlayer? and @currentPlayer < @size() - 1
 			++@currentPlayer
+			@lastPlayer = @currentPlayer - 1
 		else
 			@currentPlayer = 0
-		@players[@currentPlayer]
+			@lastPlayer = @size() - 1
+		[@players[@currentPlayer], @players[@lastPlayer]]
 
 class MiaGame
 	constructor: ->
@@ -48,6 +46,7 @@ class MiaGame
 		@actualDice = null
 		@announcedDice = null
 		@currentPlayer = null
+		@lastPlayer = null
 		@score = require('./score').create()
 
 	registerPlayer: (player) -> @players.add player
@@ -87,7 +86,7 @@ class MiaGame
 	permuteCurrentRound: -> @currentRound.permute()
 
 	nextTurn: ->
-		@currentPlayer = @currentRound.nextPlayer()
+		[@currentPlayer, @lastPlayer] = @currentRound.nextPlayer()
 		return unless @currentPlayer
 
 		expirer = @startExpirer (=> @currentPlayerLoses 'failed to take a turn'), true
@@ -139,24 +138,26 @@ class MiaGame
 		@broadcastActualDice()
 		if not @actualDice?
 			@currentPlayerLoses 'wanted to see dice before the first roll'
-		else if @actualDice.equals(@announcedDice)
-			@currentPlayerLoses 'saw that the announcement was true'
-		else
+		else if @announcedDice.isHigherThan @actualDice
 			@lastPlayerLoses 'was caught bluffing'
+		else
+			@currentPlayerLoses 'saw that the announcement was true'
 
 	broadcastActualDice: ->
 		@currentRound.each (player) =>
 			player.actualDice @actualDice
 		
-	currentPlayerLoses: (reason) ->
+	currentPlayerLoses: (reason) -> @playerLoses @currentPlayer, reason
+
+	lastPlayerLoses: (reason) -> @playerLoses @lastPlayer, reason
+
+	playerLoses: (losingPlayer, reason) ->
 		return if @stopped
-		@score.decreaseFor @currentPlayer
+		@score.decreaseFor losingPlayer
 		@currentRound.each (player) =>
-			player.playerLost [@currentPlayer], reason
+			player.playerLost [losingPlayer], reason
 		@broadcastScore()
 
-	lastPlayerLoses: (reason) ->
-	
 	everybodyButTheCurrentPlayerLoses: (reason) ->
 		losingPlayers = @currentRound.collect (player) => player isnt @currentPlayer
 		for player in losingPlayers

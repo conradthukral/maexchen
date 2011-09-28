@@ -206,25 +206,31 @@ describe 'Mia Game', ->
 
 	describe 'next turn', ->
 		beforeEach ->
-			registerPlayers 1, 2
+			registerPlayers 1, 2, 3
 			miaGame.currentRound.add player1
 			miaGame.currentRound.add player2
+			miaGame.currentRound.add player3
 			miaGame.setBroadcastTimeout 20
-
-		currentPlayerIs = (player) ->
-			-> miaGame.currentPlayer == player
 
 		it 'should iterate over the players', ->
 			expect(miaGame.currentPlayer).toBeNull()
+			expect(miaGame.lastPlayer).toBeNull()
 
 			miaGame.nextTurn()
 			expect(miaGame.currentPlayer).toBe player1
+			expect(miaGame.lastPlayer).toBe player3
 
 			miaGame.nextTurn()
 			expect(miaGame.currentPlayer).toBe player2
+			expect(miaGame.lastPlayer).toBe player1
+
+			miaGame.nextTurn()
+			expect(miaGame.currentPlayer).toBe player3
+			expect(miaGame.lastPlayer).toBe player2
 
 			miaGame.nextTurn()
 			expect(miaGame.currentPlayer).toBe player1
+			expect(miaGame.lastPlayer).toBe player3
 
 		it 'should tell the first player in round that it is her turn', ->
 			spyOn player1, 'yourTurn'
@@ -405,12 +411,19 @@ describe 'Mia Game', ->
 			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'wanted to see dice before the first roll'
 			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
 
-		it 'should make last player lose when actualDice differ from announcedDice', ->
-			miaGame.actualDice = dice.create 2, 3
-			miaGame.announcedDice = dice.create 1, 3
+		it 'should make last player lose when actualDice are lower than announcedDice', ->
+			miaGame.actualDice = dice.create 3, 1
+			miaGame.announcedDice = dice.create 3, 3
 			miaGame.showDice()
 			expect(miaGame.currentPlayerLoses).not.toHaveBeenCalled()
 			expect(miaGame.lastPlayerLoses).toHaveBeenCalledWith 'was caught bluffing'
+
+		it 'should make current lose when actualDice are higher than announcedDice', ->
+			miaGame.actualDice = dice.create 3, 3
+			miaGame.announcedDice = dice.create 3, 1
+			miaGame.showDice()
+			expect(miaGame.lastPlayerLoses).not.toHaveBeenCalled()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'saw that the announcement was true'
 
 		it 'should make current player lose when actualDice are same as announcedDice', ->
 			miaGame.actualDice = dice.create 2, 3
@@ -487,6 +500,42 @@ describe 'Mia Game', ->
 			miaGame.currentPlayerLoses 'aReason'
 			expect(miaGame.broadcastScore).toHaveBeenCalled()
 
+	describe 'last player loses', ->
+		beforeEach ->
+			registerPlayers 1, 2, 3
+			miaGame.currentRound.add player2
+			miaGame.currentRound.add player3
+
+		it 'should decrease the score', ->
+			spyOn miaGame.score, 'decreaseFor'
+			miaGame.lastPlayer = player2
+			miaGame.lastPlayerLoses 'theReason'
+			expect(miaGame.score.decreaseFor).toHaveBeenCalledWith player2
+			expect(miaGame.score.decreaseFor).not.toHaveBeenCalledWith player3
+
+		it 'should broadcast player lost to everyone in the round', ->
+			spyOn player1, 'playerLost'
+			spyOn player2, 'playerLost'
+			spyOn player3, 'playerLost'
+			miaGame.lastPlayer = player2
+			miaGame.lastPlayerLoses 'theReason'
+			expect(player2.playerLost).toHaveBeenCalledWith [player2], 'theReason'
+			expect(player3.playerLost).toHaveBeenCalledWith [player2], 'theReason'
+			expect(player1.playerLost).not.toHaveBeenCalled()
+
+		it 'should do nothing if game is stopped', ->
+			spyOn player2, 'playerLost'
+			miaGame.lastPlayer = player2
+			miaGame.stop()
+			miaGame.lastPlayerLoses 'aReason'
+			expect(player2.playerLost).not.toHaveBeenCalled()
+
+		it 'should broadcast the score of all players to all players', ->
+			spyOn miaGame, 'broadcastScore'
+			miaGame.lastPlayer = player2
+			miaGame.lastPlayerLoses 'aReason'
+			expect(miaGame.broadcastScore).toHaveBeenCalled()
+
 	describe 'everybody but the current player loses', ->
 		beforeEach ->
 			registerPlayers 1, 2, 3, 4
@@ -533,10 +582,6 @@ describe 'Mia Game', ->
 			miaGame.broadcastScore()
 			expect(player1.currentScore).toHaveBeenCalledWith 'theScore'
 			expect(player2.currentScore).toHaveBeenCalledWith 'theScore'
-
-#	describe 'broadcast mia', ->
-#		it 'should announce that the following player loses', ->
-			
 
 describe 'permutation', ->
 	list1 = list2 = {}
