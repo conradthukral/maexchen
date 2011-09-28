@@ -12,9 +12,12 @@ class PlayerList
 
 	size: -> @players.length
 	isEmpty: -> @players.length == 0
-	add: (player) -> @players.push player
 	hasPlayer: (player) -> player in @players
 	permute: -> @players.shuffle()
+
+	add: (newPlayer) ->
+		@players = @collect (existingPlayer) -> existingPlayer.name != newPlayer.name
+		@players.push newPlayer
 
 	first: (fn) ->
 		return if @isEmpty()

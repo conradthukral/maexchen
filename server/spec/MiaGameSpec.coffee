@@ -47,6 +47,16 @@ describe 'Mia Game', ->
 
 		expect(miaGame.players).toHavePlayer player1
 		expect(miaGame.players).toHavePlayer player2
+	
+	it 'overwrites previous players with the same name on register', ->
+		oldPlayer = name: 'theName'
+		newPlayer = name: 'theName'
+		
+		miaGame.registerPlayer oldPlayer
+		miaGame.registerPlayer newPlayer
+
+		expect(miaGame.players).toHavePlayer newPlayer
+		expect(miaGame.players).not.toHavePlayer oldPlayer
 
 	it 'calls permute on current round', ->
 		spyOn miaGame.currentRound, 'permute'
@@ -586,9 +596,10 @@ describe 'permutation', ->
 
 		list1 = new mia.classes.PlayerList
 		list2 = new mia.classes.PlayerList
-		for value in [1..100]
-			list1.add value
-			list2.add value
+		for playerNumber in [1..100]
+			player = name: playerNumber
+			list1.add player
+			list2.add player
 
 	it 'should have same number of objects after permutation', ->
 			expect(list1.players).toEqualArray(list2.players)
