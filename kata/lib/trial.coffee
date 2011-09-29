@@ -34,17 +34,18 @@ generators = [generateAdd, generateSubtract, generateMultiply]
 
 class Trial
 	constructor: (@sendMessage) ->
+		@right = @wrong = 0
+
+	start: ->
+		@sendQuestion()
 
 	handleMessage: (message) ->
-		if message == 'START'
-			@right = @wrong = 0
+		if message == @expectedMessage
+			console.log 'CORRECT'
+			@right++
 		else
-			if message == @expectedMessage
-				console.log 'CORRECT'
-				@right++
-			else
-				console.log "WRONG. EXPECTED #{@expectedMessage}"
-				@wrong++
+			console.log "WRONG. EXPECTED #{@expectedMessage}"
+			@wrong++
 		if @isCompleted()
 			@sendResults()
 		else

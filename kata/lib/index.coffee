@@ -10,22 +10,25 @@ createSender = (host, port) ->
 		buffer = new Buffer(message)
 		socket.send buffer, 0, buffer.length, port, host
 
-findOrCreateTrialFor = (host, port) ->
-	result = runningTrials[host]
-	unless result
-		result = trial.create createSender(host, port)
-		runningTrials[host] = result
-	result
+findTrialFor = (host) -> runningTrials[host]
+
+createTrialFor = (host, port) ->
+	result = trial.create createSender(host, port)
+	runningTrials[host] = result
 
 removeTrialFor = (host) ->
 	runningTrials[host] = null
 
-handleMessage = (message, rinfo) =>
-	console.log "Received #{message.toString()} from #{rinfo.address}"
-	currentTrial = findOrCreateTrialFor rinfo.address, rinfo.port
-	currentTrial.handleMessage message.toString()
-	removeTrialFor rinfo.address if currentTrial.isCompleted()
-
+handleMessage = (messageBuffer, rinfo) =>
+	message = messageBuffer.toString()
+	console.log "Received #{message} from #{rinfo.address}"
+	if message == 'START'
+		currentTrial = createTrialFor rinfo.address, rinfo.port
+		currentTrial.start()
+	else
+		currentTrial = findTrialFor rinfo.address
+		currentTrial?.handleMessage message
+		removeTrialFor rinfo.address if currentTrial?.isCompleted()
 
 socket = dgram.createSocket 'udp4', handleMessage
 socket.bind 9001
