@@ -7,7 +7,9 @@ public class PointsPerMinuteCalculator implements ScoreListener {
 
 	private static final long ONE_MINUTE = 60000;
 	private static final long UPDATE_INTERVAL = 10000;
-	private static final int SMOOTHING_FACTOR = 6;
+
+	private static final int MIN_SMOOTHING_FACTOR = 5;
+	private static final int MAX_SMOOTHING_FACTOR = 17;
 
 	private static class ScoreSnapshot {
 
@@ -39,12 +41,12 @@ public class PointsPerMinuteCalculator implements ScoreListener {
 	}
 
 	private void createCheckpoint(ScoreSnapshot currentScores) {
-		ScoreSnapshot referenceScores = previousScores.peek();
-		if (referenceScores != null) {
+		if (previousScores.size() >= MIN_SMOOTHING_FACTOR) {
+			ScoreSnapshot referenceScores = previousScores.peek();
 			calculatePointsPerMinute(referenceScores, currentScores);
 		}
 		previousScores.add(currentScores);
-		while (previousScores.size() > SMOOTHING_FACTOR) {
+		while (previousScores.size() > MAX_SMOOTHING_FACTOR) {
 			previousScores.poll();
 		}
 	}
