@@ -43,4 +43,8 @@ public class Scores {
 		return scores.size();
 	}
 
+	public boolean hasPlayer(String player) {
+		return scores.containsKey(player);
+	}
+
 }

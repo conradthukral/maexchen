@@ -1,5 +1,7 @@
 package spectator;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,14 +24,13 @@ public class DataCollector implements MessageListener {
 	}
 	
 	private final RoundListener roundListener;
-	private final ScoreListener scoreListener;
+	private final Collection<ScoreListener> scoreListeners = new ArrayList<ScoreListener>();
 
 	private StringBuilder currentRound = new StringBuilder();
 	private int currentRoundNumber;
 	
-	public DataCollector(RoundListener roundListener, ScoreListener scoreListener) {
+	public DataCollector(RoundListener roundListener) {
 		this.roundListener = roundListener;
-		this.scoreListener = scoreListener;
 	}
 
 	public void onMessage(String message) {
@@ -133,7 +134,13 @@ public class DataCollector implements MessageListener {
 
 	private void handleScores(String message) {
 		Scores scores = Scores.parse(message);
-		scoreListener.scoresAfterRound(scores, currentRoundNumber);
+		for (ScoreListener listener : scoreListeners) {
+			listener.scoresAfterRound(scores, currentRoundNumber);
+		}
+	}
+
+	public void addScoreListener(ScoreListener listener) {
+		scoreListeners.add(listener);
 	}
 
 }

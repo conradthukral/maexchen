@@ -18,15 +18,19 @@ public class Main {
 			}
 		});
 		
-		ScoreListener scoreListener = new ScoreListener() {
-			
+		ScoreListener highscoreUpdater = new ScoreListener() {
 			public void scoresAfterRound(Scores scores, int roundNumber) {
 				window.showScores(roundNumber, scores);				
 			}
 		};
+		ScoreListener pointsPerMinuteUpdater = new PointsPerMinuteCalculator(new PointsPerMinuteDatasetUpdater(window.getPointsPerMinute()));
+		
+		DataCollector dataCollector = new DataCollector(roundListener);
+		dataCollector.addScoreListener(highscoreUpdater);
+		dataCollector.addScoreListener(pointsPerMinuteUpdater);
 		
 		UdpCommunicator communicator = new UdpCommunicator("localhost", 9000);
-		communicator.addMessageListener(new DataCollector(roundListener, scoreListener));
+		communicator.addMessageListener(dataCollector);
 		communicator.getMessageSender().send("REGISTER;spectator");
 		
 		EventQueue.invokeLater(new Runnable() {
