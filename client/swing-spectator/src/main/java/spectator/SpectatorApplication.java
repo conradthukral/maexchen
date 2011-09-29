@@ -1,18 +1,26 @@
 package spectator;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Insets;
+import java.awt.SystemColor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 import javax.swing.table.TableModel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
+
+import net.miginfocom.swing.MigLayout;
 
 public class SpectatorApplication {
 
@@ -20,19 +28,58 @@ public class SpectatorApplication {
 	private JTextPane roundText;
 	private JScrollPane scrollPane;
 	private JTable table;
-	private JPanel panel;
-	private JTextPane roundHeader;
+	private JPanel leftColumn;
 	private JProgressBar progressBar;
+	private JPanel rightColumn;
+	private JLabel scoresTableHeader;
+	private JLabel roundHeader;
+	private JLabel lblNchsteRunde;
 
 	/**
 	 * Create the application.
 	 */
 	public SpectatorApplication() {
 		initialize();
-		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new IncrementProgressBar(progressBar, 1), 1, 1, TimeUnit.SECONDS);
+		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+				new IncrementProgressBar(progressBar, 1), 1, 1,
+				TimeUnit.SECONDS);
+
+		rightColumn = new JPanel();
+		rightColumn.setBackground(SystemColor.window);
+		rightColumn.setBorder(null);
+		frmMxchen.getContentPane().add(rightColumn, BorderLayout.EAST);
+		rightColumn.setLayout(new MigLayout("", "[400px]", "[15px][grow,fill]"));
+		scoresTableHeader = new JLabel("Warte auf ersten Punktestand...");
+		scoresTableHeader.setFont(new Font("Arial", Font.BOLD, 18));
+		rightColumn.add(scoresTableHeader, "cell 0 0,alignx left,aligny top");
+		scoresTableHeader.setVerticalAlignment(SwingConstants.TOP);
+		scoresTableHeader.setHorizontalAlignment(SwingConstants.LEFT);
+		scoresTableHeader.setAlignmentY(Component.TOP_ALIGNMENT);
+		
+				table = new JTable();
+				table.setOpaque(false);
+				table.setBorder(null);
+				table.setFillsViewportHeight(true);
+				table.setFont(new Font("Arial", Font.PLAIN, 18));
+				table.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 18));
+				table.setRowHeight(25);
+				table.setRowSelectionAllowed(false);
+				
+						scrollPane = new JScrollPane(table);
+						scrollPane.setBorder(null);
+						scrollPane.setOpaque(false);
+						rightColumn.add(scrollPane, "cell 0 1,alignx center,growy");
+						scrollPane.setViewportBorder(null);
+						scoresTableHeader.setLabelFor(table);
+
 	}
-	
+
 	public void show() {
+//		GraphicsDevice defaultScreen = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+//		if (defaultScreen.isFullScreenSupported()) {
+//			frmMxchen.setUndecorated(true);
+//			defaultScreen.setFullScreenWindow(frmMxchen);
+//		}
 		frmMxchen.setVisible(true);
 	}
 
@@ -44,38 +91,31 @@ public class SpectatorApplication {
 		frmMxchen.setTitle("Mäxchen!");
 		frmMxchen.setSize(800, 600);
 		frmMxchen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		table = new JTable();
-		table.setFont(new Font("Arial", Font.PLAIN, 18));
-		table.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 18));
-		table.setRowHeight(25);
-		table.setRowSelectionAllowed(false);
-		table.setFillsViewportHeight(true);
 
-		scrollPane = new JScrollPane(table);
-		scrollPane.setViewportBorder(null);
-		frmMxchen.getContentPane().add(scrollPane, BorderLayout.EAST);
+		leftColumn = new JPanel();
+		leftColumn.setBackground(Color.WHITE);
+		leftColumn.setBorder(null);
+		frmMxchen.getContentPane().add(leftColumn, BorderLayout.CENTER);
+		leftColumn.setLayout(new MigLayout("", "[][grow,fill]", "[][grow,fill][]"));
 		
-		panel = new JPanel();
-		frmMxchen.getContentPane().add(panel, BorderLayout.CENTER);
-		panel.setLayout(new BorderLayout(0, 0));
+		roundHeader = new JLabel("Warte auf erste Runde...");
+		roundHeader.setFont(new Font("Arial", Font.BOLD, 18));
+		leftColumn.add(roundHeader, "cell 0 0 2 1");
 		
+		lblNchsteRunde = new JLabel("nächste Runde:");
+		leftColumn.add(lblNchsteRunde, "cell 0 2");
+
 		roundText = new JTextPane();
-		panel.add(roundText, BorderLayout.CENTER);
+		roundText.setMargin(new Insets(0, 0, 0, 0));
+		roundText.setOpaque(false);
+		leftColumn.add(roundText, "cell 0 1 2 1,grow");
 		roundText.setFont(new Font("Arial", Font.PLAIN, 18));
 		roundText.setEditable(false);
-		roundText.setText("Text");
-		
-		roundHeader = new JTextPane();
-		roundHeader.setText("Round 42");
-		roundHeader.setFont(new Font("Arial", Font.PLAIN, 18));
-		roundHeader.setEditable(false);
-		panel.add(roundHeader, BorderLayout.NORTH);
-		
+
 		progressBar = new JProgressBar();
 		progressBar.setValue(10);
 		progressBar.setMaximum(10);
-		panel.add(progressBar, BorderLayout.SOUTH);
+		leftColumn.add(progressBar, "cell 1 2,growx,aligny top");
 	}
 
 	private TableModel createScoreModel(Scores scores) {
@@ -85,18 +125,23 @@ public class SpectatorApplication {
 	public void updateRoundData(final int roundNumber, final String message) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				roundHeader.setText("Runde " + roundNumber);
+				roundHeader.setText("Ablauf von Runde " + roundNumber);
 				roundText.setText(message);
 				progressBar.setValue(0);
 			}
 		});
 	}
 
-	public void showScores(Scores scores) {
-		table.setModel(createScoreModel(scores));
-		table.invalidate();
+	public void showScores(final int roundNumber, final Scores scores) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				scoresTableHeader.setText("Punktestand nach Runde " + roundNumber);
+				table.setModel(createScoreModel(scores));
+				table.invalidate();
+			}
+		});
 	}
-	
+
 	private static class IncrementProgressBar implements Runnable {
 
 		private final JProgressBar progressBar;

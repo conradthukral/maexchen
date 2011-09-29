@@ -3,6 +3,8 @@ package spectator;
 import java.awt.EventQueue;
 import java.io.IOException;
 
+import javax.swing.UIManager;
+
 import udphelper.UdpCommunicator;
 
 public class Main {
@@ -18,8 +20,8 @@ public class Main {
 		
 		ScoreListener scoreListener = new ScoreListener() {
 			
-			public void currentScores(Scores scores) {
-				window.showScores(scores);				
+			public void scoresAfterRound(Scores scores, int roundNumber) {
+				window.showScores(roundNumber, scores);				
 			}
 		};
 		
@@ -30,6 +32,7 @@ public class Main {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 					window.show();
 				} catch (Exception e) {
 					e.printStackTrace();

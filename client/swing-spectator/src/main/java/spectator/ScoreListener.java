@@ -2,6 +2,6 @@ package spectator;
 
 public interface ScoreListener {
 
-	void currentScores(Scores scores);
+	void scoresAfterRound(Scores scores, int roundNumber);
 
 }

@@ -37,7 +37,7 @@ public class DataCollector implements MessageListener {
 		if (parts[0].equals("ROUND STARTING")) {
 			currentRoundNumber = Integer.parseInt(parts[1]);
 			currentRound.setLength(0);
-		} else if (parts[0].equals("PLAYER LOST")) {
+		} else if (parts[0].equals("PLAYER LOST") || parts[0].equals("ROUND CANCELED")) {
 			appendFormattedMessage(parts);
 			roundListener.roundCompleted(currentRoundNumber, currentRound.toString());
 		} else if (parts[0].equals("SCORE")) {
@@ -69,6 +69,9 @@ public class DataCollector implements MessageListener {
 		} else if (messageParts[0].equals("PLAYER WANTS TO SEE")) {
 			String player = messageParts[1];
 			formatted = player + " will sehen!";
+		} else if (messageParts[0].equals("ROUND CANCELED")) {
+			String reason = formatReason(messageParts[1]);
+			formatted = "Runde abgebrochen: " + reason;
 		}
 		if (formatted != null) {
 			currentRound.append(formatted);
@@ -130,7 +133,7 @@ public class DataCollector implements MessageListener {
 
 	private void handleScores(String message) {
 		Scores scores = Scores.parse(message);
-		scoreListener.currentScores(scores);
+		scoreListener.scoresAfterRound(scores, currentRoundNumber);
 	}
 
 }
