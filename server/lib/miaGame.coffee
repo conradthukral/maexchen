@@ -50,10 +50,12 @@ class MiaGame
 		@lastPlayer = null
 		@score = require('./score').create()
 		@roundNumber = 0
+		@startRoundsEarly = true
 
 	registerPlayer: (player) -> @players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
 	setDiceRoller: (@diceRoller) ->
+	doNotStartRoundsEarly: -> @startRoundsEarly = false
 	stop: -> @stopped = true
 
 	newRound: ->
@@ -70,7 +72,7 @@ class MiaGame
 		@players.each (player) => # "=>" binds this to MiaGame
 			answerJoining = (join) =>
 				round.add player if join
-				if round.size() == @players.size()
+				if @startRoundsEarly and round.size() == @players.size()
 					expirer.cancelExpireActions()
 					@startRound()
 			player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)

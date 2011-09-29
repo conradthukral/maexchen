@@ -52,3 +52,8 @@ describe 'mia server', ->
 		expect(player.registrationRejected).toHaveBeenCalledWith 'NAME_ALREADY_TAKEN'
 		expect(player.registered.callCount).toBe 1
 
+	it 'should allow to configure whether the game starts rounds early', ->
+		spyOn server.game, 'doNotStartRoundsEarly'
+		server.doNotStartRoundsEarly()
+		expect(server.game.doNotStartRoundsEarly).toHaveBeenCalled()
+

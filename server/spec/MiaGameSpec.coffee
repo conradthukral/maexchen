@@ -119,12 +119,23 @@ describe 'Mia Game', ->
 				expect(firstRound).toHavePlayer player1
 				expect(secondRound).not.toHavePlayer player1
 
-		it 'should start round after all players joined', ->
+		it 'should start round early after all players joined', ->
 			spyOn miaGame, 'startRound'
 			player1.willJoinRound = accept
 			player2.willJoinRound = accept
 			miaGame.newRound()
 			expect(miaGame.startRound).toHaveBeenCalled()
+
+		it 'should not start rounds early if told not to', ->
+			spyOn miaGame, 'startRound'
+			player1.willJoinRound = accept
+			player2.willJoinRound = accept
+			miaGame.setBroadcastTimeout 20
+			miaGame.doNotStartRoundsEarly()
+			runs ->
+				miaGame.newRound()
+				expect(miaGame.startRound).not.toHaveBeenCalled()
+			waitsFor (-> miaGame.startRound.wasCalled), 30
 
 		it 'should start round after timeout when players are missing', ->
 			spyOn miaGame, 'startRound'

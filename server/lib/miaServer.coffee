@@ -23,6 +23,9 @@ class Server
 
 	startGame: ->
 		@game.newRound()
+	
+	doNotStartRoundsEarly: ->
+		@game.doNotStartRoundsEarly()
 
 	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
 		if messageCommand == 'REGISTER'
