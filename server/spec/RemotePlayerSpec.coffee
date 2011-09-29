@@ -120,7 +120,7 @@ describe "remotePlayer", ->
 			player.playerWantsToSee seeingPlayer
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'PLAYER WANTS TO SEE;seeingPlayer'
 
-	it 'should send ACTUAL DICE notifications', ->
+		it 'should send ACTUAL DICE notifications', ->
 			player.actualDice dice.create(3, 2)
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ACTUAL DICE;3,2'
 
@@ -140,6 +140,6 @@ describe "remotePlayer", ->
 			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REGISTERED'
 
 		it 'should send REJECTED notifications', ->
-			player.registrationRejected()
-			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REJECTED'
+			player.registrationRejected 'forAReason'
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'REJECTED;forAReason'
 

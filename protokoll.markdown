@@ -17,14 +17,17 @@ Protokoll
 Anmelden
 --------
 - client->server: `REGISTER;name`
-- Falls name neu ist, oder die registrierung unter demselben namen zuletzt von derselben IP kam:
+- Falls name gültig und neu ist, oder die registrierung unter demselben namen zuletzt von derselben IP kam:
   - Server kommuniziert mit dem Client ab jetzt, indem er Nachrichten an die Ursprungs-IP und Ursprungs-Port der Register-Nachricht schickt.
   - server->client: `REGISTERED`
 - Ansonsten:
   server->client: `REJECTED`
 
-(TODO: passwort weg, dafür IP-vergleich einbauen)
-  
+Gültige Spielernamen
+- enthalten keinen whitespace
+- enthalten keine Doppelpunkte, Semikolons oder Kommas
+- sind maximal 20 Zeichen lang
+
 Start einer Spielrunde
 -----------------------
 - server->clients: `ROUND STARTING;rundennummer;token`

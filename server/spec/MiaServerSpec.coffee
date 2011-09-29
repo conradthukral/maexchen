@@ -19,10 +19,24 @@ describe 'mia server', ->
 	afterEach ->
 		server.shutDown()
 	
+	expectNameToBeRejected = (name) ->
+		server.handleMessage 'REGISTER', [name], 'theHost', 'thePort'
+		expect(player.registrationRejected).toHaveBeenCalledWith 'INVALID_NAME'
+		expect(server.game.registerPlayer).not.toHaveBeenCalled()
+		expect(player.registered).not.toHaveBeenCalled()
+
 	it 'should accept registrations', ->
 		server.handleMessage 'REGISTER', ['theName'], 'theHost', 'thePort'
 		expect(server.game.registerPlayer).toHaveBeenCalled()
 		expect(player.registered).toHaveBeenCalled()
+	
+	it 'should reject registrations with invalid player names', ->
+		expectNameToBeRejected ''
+		expectNameToBeRejected 'nameWithSemicolon;'
+		expectNameToBeRejected 'white space'
+		expectNameToBeRejected 'nameWithComma,'
+		expectNameToBeRejected 'nameWithColon:'
+		expectNameToBeRejected 'nameWhichIsWayTooLong'
 
 	it 'should accept an updated registration from the same remote host', ->
 		server.handleMessage 'REGISTER', ['theName'], 'theHost', 'theOldPort'
@@ -35,6 +49,6 @@ describe 'mia server', ->
 		server.handleMessage 'REGISTER', ['theName'], 'theOldHost', 'thePort'
 		server.handleMessage 'REGISTER', ['theName'], 'theNewHost', 'thePort'
 		expect(server.game.registerPlayer.callCount).toBe 1
-		expect(player.registrationRejected).toHaveBeenCalled()
+		expect(player.registrationRejected).toHaveBeenCalledWith 'NAME_ALREADY_TAKEN'
 		expect(player.registered.callCount).toBe 1
 

@@ -29,15 +29,24 @@ class Server
 			name = messageArgs[0]
 			@handleRegistration name, fromHost, fromPort
 		else
-			@playerFor(fromHost, fromPort).handleMessage messageCommand, messageArgs
+			player = @playerFor(fromHost, fromPort)
+			player?.handleMessage messageCommand, messageArgs
 	
 	handleRegistration: (name, fromHost, fromPort) ->
 		newPlayer = @createPlayer name, fromHost, fromPort
-		existingPlayer = @findPlayerByName(name)
-		if not existingPlayer or existingPlayer.remoteHost == fromHost
-			@addPlayer fromHost, fromPort, newPlayer
+		unless @isValidName name
+			newPlayer.registrationRejected 'INVALID_NAME'
+		else if @nameIsTakenByAnotherPlayer name, fromHost
+			newPlayer.registrationRejected 'NAME_ALREADY_TAKEN'
 		else
-			newPlayer.registrationRejected()
+			@addPlayer fromHost, fromPort, newPlayer
+
+	isValidName: (name) ->
+		name != '' and name.length <= 20 and not /[,;:\s]/.test name
+
+	nameIsTakenByAnotherPlayer: (name, newHost) ->
+		existingPlayer = @findPlayerByName(name)
+		existingPlayer and existingPlayer.remoteHost != newHost
 
 	findPlayerByName: (name) ->
 		for key, player of @players
