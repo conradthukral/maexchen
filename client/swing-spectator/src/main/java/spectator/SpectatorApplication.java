@@ -26,6 +26,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.TimeSeriesCollection;
+import javax.swing.JSplitPane;
 
 public class SpectatorApplication {
 
@@ -42,6 +43,7 @@ public class SpectatorApplication {
 	private JLabel lblHistorie;
 	private ChartPanel chartPanel;
 	private TimeSeriesCollection pointsPerMinute;
+	private JSplitPane splitPane;
 
 	/**
 	 * Create the application.
@@ -51,40 +53,6 @@ public class SpectatorApplication {
 		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
 				new IncrementProgressBar(progressBar, 1), 1, 1,
 				TimeUnit.SECONDS);
-
-		rightColumn = new JPanel();
-		rightColumn.setBackground(SystemColor.window);
-		rightColumn.setBorder(null);
-		frmMxchen.getContentPane().add(rightColumn, BorderLayout.EAST);
-		rightColumn.setLayout(new MigLayout("", "[400px]", "[15px][][][]"));
-		scoresTableHeader = new JLabel("Warte auf ersten Punktestand...");
-		scoresTableHeader.setFont(new Font("Arial", Font.BOLD, 18));
-		rightColumn.add(scoresTableHeader, "cell 0 0,alignx left,aligny top");
-		scoresTableHeader.setVerticalAlignment(SwingConstants.TOP);
-		scoresTableHeader.setHorizontalAlignment(SwingConstants.LEFT);
-		scoresTableHeader.setAlignmentY(Component.TOP_ALIGNMENT);
-
-		table = new JTable();
-		table.setOpaque(false);
-		table.setBorder(null);
-		table.setFillsViewportHeight(true);
-		table.setFont(new Font("Arial", Font.PLAIN, 18));
-		table.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 18));
-		table.setRowHeight(25);
-		table.setRowSelectionAllowed(false);
-
-		scrollPane = new JScrollPane(table);
-		scrollPane.setBorder(null);
-		scrollPane.setOpaque(false);
-		rightColumn.add(scrollPane, "cell 0 1");
-
-		lblHistorie = new JLabel("Historie");
-		rightColumn.add(lblHistorie, "cell 0 2");
-
-		pointsPerMinute = new TimeSeriesCollection();
-		JFreeChart chart = ChartFactory.createTimeSeriesChart("Punkte pro Minute", "", "", pointsPerMinute , true, false, false);
-		chartPanel = new ChartPanel(chart);
-		rightColumn.add(chartPanel, "cell 0 3");
 	}
 
 	public void show() {
@@ -106,10 +74,44 @@ public class SpectatorApplication {
 		frmMxchen.setSize(800, 600);
 		frmMxchen.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+		rightColumn = new JPanel();
+		rightColumn.setBackground(SystemColor.window);
+		rightColumn.setBorder(null);
+		rightColumn.setLayout(new MigLayout("", "[grow,fill]", "[15px][][][]"));
+		scoresTableHeader = new JLabel("Warte auf ersten Punktestand...");
+		scoresTableHeader.setFont(new Font("Arial", Font.BOLD, 18));
+		rightColumn.add(scoresTableHeader, "cell 0 0,alignx left,aligny top");
+		scoresTableHeader.setVerticalAlignment(SwingConstants.TOP);
+		scoresTableHeader.setHorizontalAlignment(SwingConstants.LEFT);
+		scoresTableHeader.setAlignmentY(Component.TOP_ALIGNMENT);
+
+		table = new JTable();
+		table.setOpaque(false);
+		table.setBorder(null);
+		table.setFillsViewportHeight(true);
+		table.setFont(new Font("Arial", Font.PLAIN, 18));
+		table.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 18));
+		table.setRowHeight(25);
+		table.setRowSelectionAllowed(false);
+
+		scrollPane = new JScrollPane(table);
+		scrollPane.setBorder(null);
+		scrollPane.setOpaque(false);
+		rightColumn.add(scrollPane, "cell 0 1");
+
+		lblHistorie = new JLabel("Punkte pro Minute");
+		lblHistorie.setFont(new Font("Arial", Font.BOLD, 18));
+		rightColumn.add(lblHistorie, "cell 0 2");
+
+		pointsPerMinute = new TimeSeriesCollection();
+		JFreeChart chart = ChartFactory.createTimeSeriesChart("", "", "",
+				pointsPerMinute, true, false, false);
+		chartPanel = new ChartPanel(chart);
+		rightColumn.add(chartPanel, "cell 0 3");
+
 		leftColumn = new JPanel();
 		leftColumn.setBackground(Color.WHITE);
 		leftColumn.setBorder(null);
-		frmMxchen.getContentPane().add(leftColumn, BorderLayout.CENTER);
 		leftColumn.setLayout(new MigLayout("", "[][grow,fill]",
 				"[][grow,fill][]"));
 
@@ -131,6 +133,12 @@ public class SpectatorApplication {
 		progressBar.setValue(10);
 		progressBar.setMaximum(10);
 		leftColumn.add(progressBar, "cell 1 2,growx,aligny top");
+
+		splitPane = new JSplitPane();
+		splitPane.setResizeWeight(1.0);
+		splitPane.setLeftComponent(leftColumn);
+		splitPane.setRightComponent(rightColumn);
+		frmMxchen.getContentPane().add(splitPane, BorderLayout.CENTER);
 	}
 
 	private TableModel createScoreModel(Scores scores) {
@@ -177,5 +185,5 @@ public class SpectatorApplication {
 	public TimeSeriesCollection getPointsPerMinute() {
 		return pointsPerMinute;
 	}
-	
+
 }
