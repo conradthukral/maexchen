@@ -4,12 +4,7 @@ Grundlagen
 - Kommunikation zeilenweise per UDP (utf8-kodierte Strings)
 - Server öffnet einen bekannten Port
 - Clients melden sich auf dem Port als Spieler an und werden ab da für jede Runde angeschrieben
-
-TODOs
-=====
-- allgemeines Timeout?
-- zufällige reihenfolge beschreiben
-- einschränkungen für spielernamen aus dem protokoll ableiten
+- Clients haben für ihre Antwort ein recht enges Zeitfenster (250 ms)
 
 Protokoll
 =========
@@ -34,14 +29,16 @@ Start einer Spielrunde
 - client->server: `JOIN;token`
 
 Falls mindestens ein Spieler teilnehmen will:
-
+- Die teilnehmenden Spieler werden vom Server in eine zufällige Reihenfolge gebracht
 - server->clients: `ROUND STARTED;spielernamen`
   wobei spielernamen eine kommagetrennte List der Mitspieler ist (in der Reihenfolge, in der diese Runde gespielt wird)
 
 Ansonsten:
 
-- server->clients: `ROUND CANCELED;no players`
+- server->clients: `ROUND CANCELED;NO_PLAYERS`
   woraufhin eine neue Runde gestartet wird.
+
+(Runden mit nur einem Spieler werden direkt nach dem Start mit `ROUND CANCELED;ONLY_ONE_PLAYER` abgebrochen)
 
 Ablauf einer Spielrunde
 -----------------------
@@ -79,9 +76,10 @@ Nach Ende einer Runde:
 - server->clients: `SCORE;spielerpunkte*`
   wobei spielerpunkte eine kommagetrennte Liste von Einträgen in der Form `name:punkte` ist und für jeden Spieler einen Eintrag enthält
 
-Reason-Codes
-------------
+Gründe, warum ein Spieler verliert
+----------------------------------
 <table>
+<tr><th>Code</th><th>Bedeutung</th></tr>
 <tr><td>
 SEE_BEFORE_FIRST_ROLL:
 </td><td>
