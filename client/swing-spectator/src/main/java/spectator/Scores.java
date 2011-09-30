@@ -3,13 +3,13 @@ package spectator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Map;
 
 public class Scores {
 
-	private final SortedMap<String, Integer> scores = new TreeMap<String, Integer>();
+	private final Map<String, Integer> scores = new HashMap<String, Integer>();
 	
 	private final Comparator<String> compareByScores = new Comparator<String>() {
 		public int compare(String o1, String o2) {
