@@ -65,7 +65,7 @@ class MiaGame
 		expirer = @startExpirer =>
 			return if @stopped
 			if round.isEmpty()
-				@cancelRound 'no players'
+				@cancelRound 'NO_PLAYERS'
 			else
 				@startRound()
 
@@ -88,7 +88,7 @@ class MiaGame
 		if @currentRound.size() > 1
 			@nextTurn()
 		else
-			@cancelRound 'only one player'
+			@cancelRound 'ONLY_ONE_PLAYER'
 	
 	cancelRound: (reason) ->
 		@players.each (player) ->

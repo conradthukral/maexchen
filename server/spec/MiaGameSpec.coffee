@@ -156,7 +156,7 @@ describe 'Mia Game', ->
 				miaGame.newRound()
 			waitsFor (-> miaGame.cancelRound.wasCalled), 40
 			runs ->
-				expect(miaGame.cancelRound).toHaveBeenCalledWith 'no players'
+				expect(miaGame.cancelRound).toHaveBeenCalledWith 'NO_PLAYERS'
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 
 		it 'should not start a round after the game is stopped', ->
@@ -228,7 +228,7 @@ describe 'Mia Game', ->
 			spyOn miaGame, 'nextTurn'
 			miaGame.currentRound.add player1
 			miaGame.startRound()
-			expect(miaGame.cancelRound).toHaveBeenCalledWith 'only one player'
+			expect(miaGame.cancelRound).toHaveBeenCalledWith 'ONLY_ONE_PLAYER'
 			expect(miaGame.nextTurn).not.toHaveBeenCalled()
 
 	describe 'cancel round', ->

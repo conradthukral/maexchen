@@ -52,7 +52,7 @@ describe 'the Mia server', ->
 
 		it 'should keep trying to start a round while nobody joins', ->
 			client.receivesOfferToJoinRound 1
-			client.receivesNotificationThatRoundWasCanceled 'no players'
+			client.receivesNotificationThatRoundWasCanceled 'NO_PLAYERS'
 
 			client.receivesOfferToJoinRound 2
 	
@@ -71,7 +71,7 @@ describe 'the Mia server', ->
 			player.receivesOfferToJoinRound 1
 			player.joinsRound()
 			player.receivesNotificationThatRoundIsStarting 'thePlayer'
-			player.receivesNotificationThatRoundWasCanceled 'only one player'
+			player.receivesNotificationThatRoundWasCanceled 'ONLY_ONE_PLAYER'
 			player.receivesScores thePlayer: 1
 			
 			player.receivesOfferToJoinRound 2
