@@ -21,7 +21,8 @@ Ansonsten:
 
   - server->client: `REJECTED`
 
-Gültige Spielernamen
+Kriterien für gültige Spielernamen:
+
 - enthalten keinen whitespace
 - enthalten keine Doppelpunkte, Semikolons oder Kommas
 - sind maximal 20 Zeichen lang
