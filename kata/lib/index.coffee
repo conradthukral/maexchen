@@ -32,3 +32,5 @@ handleMessage = (messageBuffer, rinfo) =>
 
 socket = dgram.createSocket 'udp4', handleMessage
 socket.bind 9001
+
+console.log "Kata server started on port 9001"
