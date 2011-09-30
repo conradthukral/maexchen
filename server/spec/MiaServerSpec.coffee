@@ -14,6 +14,7 @@ describe 'mia server', ->
 		spyOn player, 'registered'
 		spyOn player, 'registrationRejected'
 		spyOn server.game, 'registerPlayer'
+		spyOn server.game, 'registerSpectator'
 		spyOn(server, 'createPlayer').andReturn player
 
 	afterEach ->
@@ -37,6 +38,11 @@ describe 'mia server', ->
 		expectNameToBeRejected 'nameWithComma,'
 		expectNameToBeRejected 'nameWithColon:'
 		expectNameToBeRejected 'nameWhichIsWayTooLong'
+
+	it 'should accept spectator registrations', ->
+		server.handleMessage 'REGISTER_SPECTATOR', ['theName'], 'theHost', 'thePort'
+		expect(server.game.registerSpectator).toHaveBeenCalled()
+		expect(player.registered).toHaveBeenCalled()
 
 	it 'should accept an updated registration from the same remote host', ->
 		server.handleMessage 'REGISTER', ['theName'], 'theHost', 'theOldPort'

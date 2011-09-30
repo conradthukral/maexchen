@@ -31,7 +31,7 @@ public class Main {
 		
 		UdpCommunicator communicator = new UdpCommunicator("localhost", 9000);
 		communicator.addMessageListener(dataCollector);
-		communicator.getMessageSender().send("REGISTER;spectator");
+		communicator.getMessageSender().send("REGISTER_SPECTATOR;spectator");
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {

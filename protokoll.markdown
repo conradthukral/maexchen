@@ -7,10 +7,12 @@ Grundlagen
 - Server öffnet einen bekannten Port
 - Clients melden sich auf dem Port als Spieler an und werden ab da für jede Runde angeschrieben
 - Clients haben für ihre Antwort ein recht enges Zeitfenster (250 ms)
+- Ein Client kann sich als Zuschauer (Spectator) registrieren. Ein Zuschauer kann nicht aktiv an den Runden teilnehmen, erhält aber alle Nachrichten, die an alle Clients geschickt werden.
 
 Anmelden
 --------
 - client->server: `REGISTER;name`
+- client->server: `REGISTER_SPECTATOR;name`
 
 Falls name gültig und neu ist, oder die Registrierung unter demselben Namen zuletzt von derselben IP kam:
 

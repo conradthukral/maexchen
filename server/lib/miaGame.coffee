@@ -10,8 +10,8 @@ Messages =
 class PlayerList
 	constructor: -> @players = []
 
-	size: -> @players.length
-	isEmpty: -> @players.length == 0
+	size: -> @realPlayers().length
+	isEmpty: -> @size() == 0
 	hasPlayer: (player) -> player in @players
 	permute: -> @players.shuffle()
 
@@ -23,8 +23,10 @@ class PlayerList
 		return if @isEmpty()
 		fn @players[0]
 
-	each: (fn) -> @players.forEach(fn)
-	
+	each: (fn) -> @players.forEach fn
+
+	realPlayers: -> @collect (player) -> !player.isSpectator?
+
 	collect: (predicate) ->
 		player for player in @players when predicate(player)
 
@@ -53,6 +55,9 @@ class MiaGame
 		@startRoundsEarly = true
 
 	registerPlayer: (player) -> @players.add player
+	registerSpectator: (player) ->
+		player.isSpectator = true
+		@players.add player
 	setBroadcastTimeout: (@broadcastTimeout) ->
 	setDiceRoller: (@diceRoller) ->
 	doNotStartRoundsEarly: -> @startRoundsEarly = false
@@ -64,13 +69,16 @@ class MiaGame
 		@currentRound = round = new PlayerList
 		expirer = @startExpirer =>
 			return if @stopped
-			if round.isEmpty()
+			if @players.isEmpty()
+				@newRound()
+			else if round.isEmpty()
 				@cancelRound 'NO_PLAYERS'
 			else
 				@startRound()
 
 		@players.each (player) => # "=>" binds this to MiaGame
 			answerJoining = (join) =>
+				return if player.isSpectator?
 				round.add player if join
 				if @startRoundsEarly and round.size() == @players.size()
 					expirer.cancelExpireActions()
