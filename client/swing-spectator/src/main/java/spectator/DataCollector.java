@@ -21,6 +21,8 @@ public class DataCollector implements MessageListener {
 		REASON_TEXTS.put("SEE_FAILED", "wollte sehen... aber doch nicht sowas!");
 		REASON_TEXTS.put("CAUGHT_BLUFFING", "hatte gehofft, dass das keiner überprüft");
 		REASON_TEXTS.put("MIA", "Mäxchen");
+		REASON_TEXTS.put("NO_PLAYERS", "niemand wollte mitspielen");
+		REASON_TEXTS.put("ONLY_ONE_PLAYER", "alleine kann man nicht Mäxchen spielen");
 	}
 	
 	private final RoundListener roundListener;
@@ -40,6 +42,7 @@ public class DataCollector implements MessageListener {
 			currentRound.setLength(0);
 		} else if (parts[0].equals("PLAYER LOST") || parts[0].equals("ROUND CANCELED")) {
 			appendFormattedMessage(parts);
+			if (roundIsIncomplete()) return;
 			roundListener.roundCompleted(currentRoundNumber, currentRound.toString());
 		} else if (parts[0].equals("SCORE")) {
 			handleScores(message);
@@ -115,7 +118,7 @@ public class DataCollector implements MessageListener {
 		} else {
 			result = germanJoin(players) + " verlieren";
 		}
-		return result + " (" + reason + ")";
+		return result + ": " + reason;
 	}
 
 	private String germanJoin(String[] parts) {
@@ -133,10 +136,15 @@ public class DataCollector implements MessageListener {
 	}
 
 	private void handleScores(String message) {
+		if (roundIsIncomplete()) return;
 		Scores scores = Scores.parse(message);
 		for (ScoreListener listener : scoreListeners) {
 			listener.scoresAfterRound(scores, currentRoundNumber);
 		}
+	}
+
+	private boolean roundIsIncomplete() {
+		return currentRoundNumber == 0;
 	}
 
 	public void addScoreListener(ScoreListener listener) {
