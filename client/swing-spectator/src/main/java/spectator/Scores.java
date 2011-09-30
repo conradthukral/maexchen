@@ -1,6 +1,8 @@
 package spectator;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -8,6 +10,14 @@ import java.util.TreeMap;
 public class Scores {
 
 	private final SortedMap<String, Integer> scores = new TreeMap<String, Integer>();
+	
+	private final Comparator<String> compareByScores = new Comparator<String>() {
+		public int compare(String o1, String o2) {
+			int score1 = scoreFor(o1);
+			int score2 = scoreFor(o2);
+			return score2 - score1;
+		}
+	};
 	
 	public static Scores parse(String message) {
 		Scores result = new Scores();
@@ -30,7 +40,9 @@ public class Scores {
 	}
 	
 	public List<String> players() {
-		return new ArrayList<String>(scores.keySet());
+		ArrayList<String> result = new ArrayList<String>(scores.keySet());
+		Collections.sort(result, compareByScores);
+		return result;
 	}
 	
 	public int scoreFor(String player) {
