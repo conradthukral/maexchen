@@ -258,6 +258,9 @@ class FakeClient
 		@socket.bind()
 		@clientPort = @socket.address().port
 		@currentToken = 'noTokenReceived'
+		@debug = false
+
+	enableLogging : -> @debug = true
 
 	sendPlayerRegistration: ->
 		@send "REGISTER;#{@name}"
@@ -335,7 +338,7 @@ class FakeClient
 
 	receivesMessageMatching: (messageForDisplay, matcher) ->
 		runs =>
-			console.log "[#{@name}] waiting for #{messageForDisplay}"
+			console.log "[#{@name}] waiting for #{messageForDisplay}" if @debug
 			messageReceived = => @hasReceivedMessageMatching matcher
 			waitsFor messageReceived, messageForDisplay, 250
 
@@ -350,7 +353,7 @@ class FakeClient
 
 	send: (string) ->
 		runs =>
-			console.log "[#{@name}] sending #{string}"
+			console.log "[#{@name}] sending #{string}" if @debug
 			buffer = new Buffer(string)
 			@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
 

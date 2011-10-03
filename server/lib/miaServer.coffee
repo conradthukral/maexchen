@@ -8,18 +8,20 @@ class Server
 		handleRawMessage = (message, rinfo) =>
 			fromHost = rinfo.address
 			fromPort = rinfo.port
-			console.log "received '#{message}' from #{fromHost}:#{fromPort}"
+			console.log "received '#{message}' from #{fromHost}:#{fromPort}" if @logging
 			messageParts = message.toString().split ';'
 			command = messageParts[0]
 			args = messageParts[1..]
 			@handleMessage command, args, fromHost, fromPort
 
+		@logging = false
 		@players = {}
 		@game = miaGame.createGame()
 		@game.setBroadcastTimeout @timeout
 		@socket = dgram.createSocket 'udp4', handleRawMessage
 		@socket.bind port
-		console.log "\nMia server started on port #{port}"
+
+	enableLogging: -> @logging = true
 
 	startGame: ->
 		@game.newRound()
@@ -79,7 +81,7 @@ class Server
 
 	createPlayer: (name, host, port) ->
 		sendMessageCallback = (message) =>
-			console.log "sending '#{message}' to #{name} (#{host}:#{port})"
+			console.log "sending '#{message}' to #{name} (#{host}:#{port})" if @logging
 			buffer = new Buffer(message)
 			@socket.send buffer, 0, buffer.length, port, host
 		result = remotePlayer.create name, sendMessageCallback

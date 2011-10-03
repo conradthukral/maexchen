@@ -14,7 +14,10 @@ initialDelay = parseInt process.argv[5]
 initialDelay = 0 if isNaN initialDelay
 
 server = miaServer.start port, answerTimeout
+server.enableLogging()
 server.doNotStartRoundsEarly() unless startRoundsEarly
+
+console.log "Mia server started on port #{port}"
 
 setTimeout (-> server.startGame()), initialDelay
 
