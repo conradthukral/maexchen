@@ -25,6 +25,8 @@ class PlayerList
 
 	each: (fn) -> @players.forEach fn
 
+	eachRealPlayer: (fn) -> @realPlayers().forEach fn
+
 	realPlayers: -> @collect (player) -> !player.isSpectator?
 
 	collect: (predicate) ->
@@ -75,15 +77,13 @@ class MiaGame
 				@cancelRound 'NO_PLAYERS'
 			else
 				@startRound()
-		realPlayers = @players.realPlayers()
-		realPlayers.forEach (player) => # "=>" binds this to MiaGame
+		@players.eachRealPlayer (player) => # "=>" binds this to MiaGame
 			answerJoining = (join) =>
 				round.add player if join
-				if @startRoundsEarly and round.size() == realPlayers.length
+				if @startRoundsEarly and round.size() == @players.size()
 					expirer.cancelExpireActions()
 					@startRound()
-			unless player.isSpectator?
-				player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)
+			player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)
 
 	startRound: ->
 		@permuteCurrentRound()
