@@ -30,6 +30,11 @@ describe 'mia server', ->
 		server.handleMessage 'REGISTER', ['theName'], 'theHost', 'thePort'
 		expect(server.game.registerPlayer).toHaveBeenCalled()
 		expect(player.registered).toHaveBeenCalled()
+
+	it 'should accept spectator registrations', ->
+		server.handleMessage 'REGISTER_SPECTATOR', ['theName'], 'theHost', 'thePort'
+		expect(server.game.registerSpectator).toHaveBeenCalled()
+		expect(player.registered).toHaveBeenCalled()
 	
 	it 'should reject registrations with invalid player names', ->
 		expectNameToBeRejected ''

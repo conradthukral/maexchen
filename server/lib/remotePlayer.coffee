@@ -75,9 +75,9 @@ class RemotePlayer
 		@changeState new InactiveState
 		@sendMessage "ROUND CANCELED;#{reason}"
 
-	roundStarted: (players) ->
+	roundStarted: (roundNumber, players) ->
 		playersString = (player.name for player in players).join()
-		@sendMessage "ROUND STARTED;#{playersString}"
+		@sendMessage "ROUND STARTED;#{roundNumber};#{playersString}"
 
 	announcedDiceBy: (dice, player) ->
 		@sendMessage "ANNOUNCED;#{player.name};#{dice}"

@@ -75,15 +75,15 @@ class MiaGame
 				@cancelRound 'NO_PLAYERS'
 			else
 				@startRound()
-
-		@players.each (player) => # "=>" binds this to MiaGame
+		realPlayers = @players.realPlayers()
+		realPlayers.forEach (player) => # "=>" binds this to MiaGame
 			answerJoining = (join) =>
-				return if player.isSpectator?
 				round.add player if join
-				if @startRoundsEarly and round.size() == @players.size()
+				if @startRoundsEarly and round.size() == realPlayers.length
 					expirer.cancelExpireActions()
 					@startRound()
-			player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)
+			unless player.isSpectator?
+				player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)
 
 	startRound: ->
 		@permuteCurrentRound()
@@ -92,7 +92,7 @@ class MiaGame
 		@currentRound.each (player) =>
 			@score.increaseFor player
 		@players.each (player) =>
-			player.roundStarted @currentRound.players
+			player.roundStarted @roundNumber, @currentRound.players
 		if @currentRound.size() > 1
 			@nextTurn()
 		else

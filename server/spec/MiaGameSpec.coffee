@@ -101,17 +101,11 @@ describe 'Mia Game', ->
 			miaGame.newRound()
 			expect(miaGame.currentRound).not.toHavePlayer player1
 
-		it 'should broadcast round starting to spectators', ->
+		it 'should not ask spectators to join rounds', ->
 			spyOn player3, 'willJoinRound'
 			miaGame.registerSpectator player3
 			miaGame.newRound()
-			expect(player3.willJoinRound).toHaveBeenCalled()
-
-		it 'should not allow spectators to join a round', ->
-			player3.willJoinRound = accept
-			miaGame.registerSpectator player3
-			miaGame.newRound()
-			expect(miaGame.currentRound).not.toHavePlayer player3
+			expect(player3.willJoinRound).not.toHaveBeenCalled()
 
 		it 'should not accept joins for the current round after timeout', ->
 			miaGame.setBroadcastTimeout 20
@@ -229,9 +223,10 @@ describe 'Mia Game', ->
 			spyOn player1, 'roundStarted'
 			spyOn player2, 'roundStarted'
 			miaGame.currentRound.add player1
+			miaGame.roundNumber = 42
 			miaGame.startRound()
-			expect(player1.roundStarted).toHaveBeenCalledWith [player1]
-			expect(player2.roundStarted).toHaveBeenCalledWith [player1]
+			expect(player1.roundStarted).toHaveBeenCalledWith 42, [player1]
+			expect(player2.roundStarted).toHaveBeenCalledWith 42, [player1]
 
 		it 'should call next turn', ->
 			spyOn miaGame, 'nextTurn'

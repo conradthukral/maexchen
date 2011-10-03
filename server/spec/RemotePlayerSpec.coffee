@@ -107,8 +107,8 @@ describe "remotePlayer", ->
 		it 'should send ROUND STARTED notifications', ->
 			player1 = name: 'player1'
 			player2 = name: 'player2'
-			player.roundStarted [player1, player2]
-			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTED;player1,player2'
+			player.roundStarted 23, [player1, player2]
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTED;23;player1,player2'
 
 		it 'should send PLAYER ROLLS notifications', ->
 			rollingPlayer = name: 'rollingPlayer'

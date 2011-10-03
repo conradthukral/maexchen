@@ -11,6 +11,12 @@ setupFakeClient = (clientName) ->
 	result.sendPlayerRegistration()
 	result.receivesRegistrationConfirmation()
 	result
+
+setupSpectator = (clientName) ->
+	result = new FakeClient serverPort, clientName
+	result.sendSpectatorRegistration()
+	result.receivesRegistrationConfirmation()
+	result
 		
 keepServerFromPermutingThePlayers = ->
 	server.game.permuteCurrentRound = ->
@@ -56,6 +62,29 @@ describe 'the Mia server', ->
 
 			client.receivesOfferToJoinRound 2
 	
+	describe 'should not ask spectators to join rounds', ->
+
+		player = null
+		spectator = null
+
+		beforeEach ->
+			spectator = setupSpectator 'theSpectator'
+			player = setupFakeClient 'thePlayer'
+			runs -> server.startGame()
+
+		afterEach ->
+			spectator.shutDown()
+			player.shutDown()
+
+		it 'should not invite spectators to join rounds', ->
+			player.receivesOfferToJoinRound 1
+			player.joinsRound()
+
+			player.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
+
+			spectator.didNotReceiveOfferToJoinRound()
+			spectator.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
+
 	describe 'when only one player participates in a round', ->
 
 		player = null
@@ -70,7 +99,7 @@ describe 'the Mia server', ->
 		it 'should award the player a point without playing the round', ->
 			player.receivesOfferToJoinRound 1
 			player.joinsRound()
-			player.receivesNotificationThatRoundIsStarting 'thePlayer'
+			player.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
 			player.receivesNotificationThatRoundWasCanceled 'ONLY_ONE_PLAYER'
 			player.receivesScores thePlayer: 1
 			
@@ -138,7 +167,7 @@ describe 'the Mia server', ->
 		it 'should host a round with a player calling and losing', =>
 			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
-			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
+			eachPlayer.receivesNotificationThatRoundIsStarting 1, 'client1', 'client2'
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
@@ -160,7 +189,7 @@ describe 'the Mia server', ->
 		it 'should host a round with a player calling and winning', ->
 			eachPlayer.receivesOfferToJoinRound 1
 			eachPlayer.joinsRound()
-			eachPlayer.receivesNotificationThatRoundIsStarting 'client1', 'client2'
+			eachPlayer.receivesNotificationThatRoundIsStarting 1, 'client1', 'client2'
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
@@ -264,12 +293,20 @@ class FakeClient
 
 	sendPlayerRegistration: ->
 		@send "REGISTER;#{@name}"
+	
+	sendSpectatorRegistration: ->
+		@send "REGISTER_SPECTATOR;#{@name}"
 
 	receivesRegistrationConfirmation: ->
 		@receives 'REGISTERED'
 
 	receivesOfferToJoinRound: (roundNumber) ->
 		@receivesWithAppendedToken "ROUND STARTING;#{roundNumber}"
+	
+	didNotReceiveOfferToJoinRound: ->
+		runs =>
+			matcher = (message) -> /ROUND STARTING/.test(message)
+			expect(@hasReceivedMessageMatching matcher).toBeFalsy()
 	
 	joinsRound: ->
 		runs =>
@@ -281,8 +318,8 @@ class FakeClient
 	receivesNotificationThatRoundWasCanceled: (reason) ->
 		@receives "ROUND CANCELED;#{reason}"
 
-	receivesNotificationThatRoundIsStarting: (playernames...) ->
-		@receives "ROUND STARTED;#{playernames.join()}"
+	receivesNotificationThatRoundIsStarting: (roundNumber, playernames...) ->
+		@receives "ROUND STARTED;#{roundNumber};#{playernames.join()}"
 
 	isAskedToPlayATurn: ->
 		@receivesWithAppendedToken 'YOUR TURN'
@@ -348,7 +385,6 @@ class FakeClient
 			if matcher(message)
 				@messages = @messages[i+1..]
 				return true
-		@messages = []
 		return false
 
 	send: (string) ->

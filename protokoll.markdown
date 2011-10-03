@@ -37,7 +37,7 @@ Start einer Spielrunde
 Falls mindestens ein Spieler teilnehmen will:
 
 - Die teilnehmenden Spieler werden vom Server in eine zufällige Reihenfolge gebracht
-- server->clients: `ROUND STARTED;spielernamen` (wobei `spielernamen` eine kommagetrennte List der Mitspieler ist, in der Reihenfolge, in der diese Runde gespielt wird)
+- server->clients: `ROUND STARTED;rundennummer;spielernamen` (wobei `spielernamen` eine kommagetrennte List der Mitspieler ist, in der Reihenfolge, in der diese Runde gespielt wird)
 
 Ansonsten:
 

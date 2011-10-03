@@ -37,7 +37,7 @@ public class DataCollector implements MessageListener {
 
 	public void onMessage(String message) {
 		String[] parts = message.split(";");
-		if (parts[0].equals("ROUND STARTING")) {
+		if (parts[0].equals("ROUND STARTED")) {
 			currentRoundNumber = Integer.parseInt(parts[1]);
 			currentRound.setLength(0);
 		} else if (parts[0].equals("PLAYER LOST") || parts[0].equals("ROUND CANCELED")) {
