@@ -49,7 +49,17 @@ describe 'Mia Game', ->
 
 		expect(miaGame.players).toHavePlayer player1
 		expect(miaGame.players).toHavePlayer player2
-	
+
+	it 'accepts spectators to register', ->
+		expect(miaGame.players).not.toHavePlayer player1
+		miaGame.registerSpectator player1
+
+		expect(miaGame.players).toHavePlayer player1
+
+	it 'should not count spectators as players', ->
+		miaGame.registerSpectator player1
+		expect(miaGame.players.size()).toBe 0
+
 	it 'overwrites previous players with the same name on register', ->
 		oldPlayer = name: 'theName'
 		newPlayer = name: 'theName'
@@ -90,6 +100,18 @@ describe 'Mia Game', ->
 			player1.willJoinRound = deny
 			miaGame.newRound()
 			expect(miaGame.currentRound).not.toHavePlayer player1
+
+		it 'should broadcast round starting to spectators', ->
+			spyOn player3, 'willJoinRound'
+			miaGame.registerSpectator player3
+			miaGame.newRound()
+			expect(player3.willJoinRound).toHaveBeenCalled()
+
+		it 'should not allow spectators to join a round', ->
+			player3.willJoinRound = accept
+			miaGame.registerSpectator player3
+			miaGame.newRound()
+			expect(miaGame.currentRound).not.toHavePlayer player3
 
 		it 'should not accept joins for the current round after timeout', ->
 			miaGame.setBroadcastTimeout 20
@@ -136,6 +158,21 @@ describe 'Mia Game', ->
 				miaGame.newRound()
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 			waitsFor (-> miaGame.startRound.wasCalled), 30
+
+		it 'should neither start round nor cancel it when only spectators are in the game', ->
+			spyOn miaGame, 'startRound'
+			spyOn miaGame, 'cancelRound'
+			miaGame.players = new mia.classes.PlayerList()
+			miaGame.registerSpectator player1
+			miaGame.setBroadcastTimeout 20
+			runs ->
+				miaGame.newRound()
+				expect(miaGame.startRound).not.toHaveBeenCalled()
+				expect(miaGame.cancelRound).not.toHaveBeenCalled()
+			waits 40
+			runs ->
+				expect(miaGame.startRound).not.toHaveBeenCalled()
+				expect(miaGame.cancelRound).not.toHaveBeenCalled()
 
 		it 'should start round after timeout when players are missing', ->
 			spyOn miaGame, 'startRound'

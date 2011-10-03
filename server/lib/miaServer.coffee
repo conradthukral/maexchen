@@ -30,19 +30,22 @@ class Server
 	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
 		if messageCommand == 'REGISTER'
 			name = messageArgs[0]
-			@handleRegistration name, fromHost, fromPort
+			@handleRegistration name, fromHost, fromPort, false
+		else if messageCommand == 'REGISTER_SPECTATOR'
+			name = messageArgs[0]
+			@handleRegistration name, fromHost, fromPort, true
 		else
 			player = @playerFor(fromHost, fromPort)
 			player?.handleMessage messageCommand, messageArgs
 	
-	handleRegistration: (name, fromHost, fromPort) ->
+	handleRegistration: (name, fromHost, fromPort, isSpectator) ->
 		newPlayer = @createPlayer name, fromHost, fromPort
 		unless @isValidName name
 			newPlayer.registrationRejected 'INVALID_NAME'
 		else if @nameIsTakenByAnotherPlayer name, fromHost
 			newPlayer.registrationRejected 'NAME_ALREADY_TAKEN'
 		else
-			@addPlayer fromHost, fromPort, newPlayer
+			@addPlayer fromHost, fromPort, newPlayer, isSpectator
 
 	isValidName: (name) ->
 		name != '' and name.length <= 20 and not /[,;:\s]/.test name
@@ -66,9 +69,12 @@ class Server
 	playerFor: (host, port) ->
 		@players["#{host}:#{port}"]
 	
-	addPlayer: (host, port, player) ->
+	addPlayer: (host, port, player, isSpectator) ->
 		@players["#{host}:#{port}"] = player
-		@game.registerPlayer player
+		if isSpectator
+			@game.registerSpectator player
+		else
+			@game.registerPlayer player
 		player.registered()
 
 	createPlayer: (name, host, port) ->
