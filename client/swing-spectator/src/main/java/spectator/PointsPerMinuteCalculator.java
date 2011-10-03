@@ -9,10 +9,9 @@ public class PointsPerMinuteCalculator implements ScoreListener {
 	private static final long UPDATE_INTERVAL = 10000;
 
 	private static final int MIN_SMOOTHING_FACTOR = 5;
-	private static final int MAX_SMOOTHING_FACTOR = 17;
+	private static final int MAX_SMOOTHING_FACTOR = 5;
 
 	private static class ScoreSnapshot {
-
 		public Scores scores;
 		public long timestamp;
 		
@@ -20,7 +19,6 @@ public class PointsPerMinuteCalculator implements ScoreListener {
 			this.scores = scores;
 			this.timestamp = timestamp;
 		}
-		
 	}
 	
 	private final Queue<ScoreSnapshot> previousScores = new LinkedList<ScoreSnapshot>();
