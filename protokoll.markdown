@@ -31,7 +31,7 @@ Kriterien für gültige Spielernamen:
 
 Start einer Spielrunde
 -----------------------
-- server->clients: `ROUND STARTING;rundennummer;token`
+- server->clients: `ROUND STARTING;token`
 - client->server: `JOIN;token`
 
 Falls mindestens ein Spieler teilnehmen will:

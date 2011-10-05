@@ -22,10 +22,10 @@ describe "remotePlayer", ->
 	describe 'when asked to join a round', ->
 
 		beforeEach ->
-			player.willJoinRound 'theRoundNumber', mySpy.callback
+			player.willJoinRound mySpy.callback
 
 		it 'should send ROUND STARTING', ->
-			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTING;theRoundNumber;theToken'
+			expect(mySpy.sendMessage).toHaveBeenCalledWith 'ROUND STARTING;theToken'
 		
 		it 'should accept a JOIN', ->
 			player.handleMessage 'JOIN', ['theToken']

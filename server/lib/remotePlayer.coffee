@@ -50,10 +50,10 @@ class RemotePlayer
 	changeState: (newState) =>
 		@currentState = newState
 
-	willJoinRound: (roundNumber, callback) ->
+	willJoinRound: (callback) ->
 		token = @generateToken()
 		@changeState new WaitingForJoinState(token, callback, @changeState)
-		@sendMessage "ROUND STARTING;#{roundNumber};#{token}"
+		@sendMessage "ROUND STARTING;#{token}"
 
 	yourTurn: (callback) ->
 		token = @generateToken()

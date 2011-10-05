@@ -83,7 +83,7 @@ class MiaGame
 				if @startRoundsEarly and round.size() == @players.size()
 					expirer.cancelExpireActions()
 					@startRound()
-			player.willJoinRound @roundNumber, expirer.makeExpiring(answerJoining)
+			player.willJoinRound expirer.makeExpiring(answerJoining)
 
 	startRound: ->
 		@permuteCurrentRound()

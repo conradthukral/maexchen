@@ -17,8 +17,8 @@ dice = require '../lib/dice'
 
 describe 'Mia Game', ->
 	miaGame = player1 = player2 = player3 = player4 = registerPlayers = null
-	accept = (roundNumber, question) -> question(true)
-	deny = (roundNumber, question) -> question(false)
+	accept = (question) -> question(true)
+	deny = (question) -> question(false)
 	roll = (question) -> question(mia.Messages.ROLL)
 	see = (question) -> question(mia.Messages.SEE)
 	garbage = (question) -> question('GARBAGE')
@@ -86,7 +86,6 @@ describe 'Mia Game', ->
 			miaGame.newRound()
 			expect(player1.willJoinRound).toHaveBeenCalled()
 			expect(player2.willJoinRound).toHaveBeenCalled()
-			expect(player1.willJoinRound.mostRecentCall.args[0]).toBe miaGame.roundNumber
 
 		it 'should have player for current round when she wants to', ->
 			player1.willJoinRound = accept
@@ -110,7 +109,7 @@ describe 'Mia Game', ->
 		it 'should not accept joins for the current round after timeout', ->
 			miaGame.setBroadcastTimeout 20
 			runs ->
-				player1.willJoinRound = (roundNumber, joinRound) ->
+				player1.willJoinRound = (joinRound) ->
 					setTimeout (-> joinRound(true)), 40
 				miaGame.newRound()
 			waits 60
@@ -120,7 +119,7 @@ describe 'Mia Game', ->
 		it 'should not have joins for first round in second round', ->
 			firstRound = secondRound = null
 			runs ->
-				player1.willJoinRound = (roundNumber, joinRound) ->
+				player1.willJoinRound = (joinRound) ->
 					setTimeout (-> joinRound(true)), 40
 				miaGame.newRound()
 				firstRound = miaGame.currentRound

@@ -26,7 +26,7 @@ public class RandomBot implements MessageListener {
 		System.out.println(message);
 		String[] parts = message.split(";");
 		if (parts[0].equals("ROUND STARTING")) {
-			tryToSend("JOIN;"+parts[2]);
+			tryToSend("JOIN;"+parts[1]);
 		} else if (parts[0].equals("YOUR TURN")) {
 			if (Math.random() < 0.8) {
 				tryToSend("ROLL;"+parts[1]);
