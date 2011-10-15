@@ -7,6 +7,9 @@ class UdpConnection
 	constructor: (@host, @port) ->
 		@id = "#{@host}:#{@port}"
 
+	belongsTo: (player) ->
+		player.remoteHost == @host
+
 class Server
 	constructor: (port, @timeout) ->
 		handleRawMessage = (message, rinfo) =>
@@ -59,7 +62,7 @@ class Server
 
 	nameIsTakenByAnotherPlayer: (name, connection) ->
 		existingPlayer = @findPlayerByName(name)
-		existingPlayer and existingPlayer.remoteHost != connection.host
+		existingPlayer and not connection.belongsTo existingPlayer
 
 	findPlayerByName: (name) ->
 		for key, player of @players
