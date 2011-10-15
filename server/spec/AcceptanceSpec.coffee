@@ -7,13 +7,13 @@ serverPort = 9000
 server = null
 
 setupFakeClient = (clientName) ->
-	result = new FakeClient serverPort, clientName
+	result = new FakeUdpClient serverPort, clientName
 	result.sendPlayerRegistration()
 	result.receivesRegistrationConfirmation()
 	result
 
 setupSpectator = (clientName) ->
-	result = new FakeClient serverPort, clientName
+	result = new FakeUdpClient serverPort, clientName
 	result.sendSpectatorRegistration()
 	result.receivesRegistrationConfirmation()
 	result
@@ -36,7 +36,7 @@ describe 'the Mia server', ->
 		client = null
 
 		beforeEach ->
-			client = new FakeClient serverPort
+			client = new FakeUdpClient serverPort
 
 		afterEach ->
 			client.shutDown()
@@ -277,19 +277,16 @@ class MultipleClients
 		for method of exampleClient
 			@[method] = wrapMethod method
 			
-class FakeClient
-	constructor: (@serverPort, @name) ->
+
+class BaseFakeClient
+	constructor: (@name) ->
 		@name = 'client' unless @name?
 		@messages = []
-		@socket = dgram.createSocket 'udp4', (msg) =>
-			# console.log "[#{@name}] received #{msg.toString()}"
-			@messages.push msg.toString()
-		@socket.bind()
-		@clientPort = @socket.address().port
 		@currentToken = 'noTokenReceived'
-		@debug = false
 
-	enableLogging : -> @debug = true
+	log: ->
+
+	enableLogging: -> @log = console.log
 
 	sendPlayerRegistration: ->
 		@send "REGISTER;#{@name}"
@@ -375,7 +372,7 @@ class FakeClient
 
 	receivesMessageMatching: (messageForDisplay, matcher) ->
 		runs =>
-			console.log "[#{@name}] waiting for #{messageForDisplay}" if @debug
+			@log "[#{@name}] waiting for #{messageForDisplay}"
 			messageReceived = => @hasReceivedMessageMatching matcher
 			waitsFor messageReceived, messageForDisplay, 250
 
@@ -387,14 +384,23 @@ class FakeClient
 				return true
 		return false
 
+class FakeUdpClient extends BaseFakeClient
+	constructor: (@serverPort, @name) ->
+		super @name
+		@socket = dgram.createSocket 'udp4', (msg) =>
+			@log "[#{@name}] received #{msg.toString()}"
+			@messages.push msg.toString()
+		@socket.bind()
+
 	send: (string) ->
 		runs =>
-			console.log "[#{@name}] sending #{string}" if @debug
+			@log "[#{@name}] sending #{string}"
 			buffer = new Buffer(string)
 			@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
 
 	shutDown: () ->
 		@socket.close()
+
 
 class FakeDiceRoller
 	constructor: (@dice) ->
