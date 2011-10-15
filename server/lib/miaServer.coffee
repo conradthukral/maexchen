@@ -3,32 +3,25 @@ dgram = require 'dgram'
 miaGame = require './miaGame'
 remotePlayer = require './remotePlayer'
 
-class UdpConnection
-	constructor: (@host, @port) ->
-		@id = "#{@host}:#{@port}"
-
-	belongsTo: (player) ->
-		player.remoteHost == @host
-
 class Server
+	log = ->
 	constructor: (port, @timeout) ->
 		handleRawMessage = (message, rinfo) =>
 			fromHost = rinfo.address
 			fromPort = rinfo.port
-			console.log "received '#{message}' from #{fromHost}:#{fromPort}" if @logging
+			log "received '#{message}' from #{fromHost}:#{fromPort}"
 			messageParts = message.toString().split ';'
 			command = messageParts[0]
 			args = messageParts[1..]
-			@handleMessage command, args, new UdpConnection(fromHost, fromPort)
+			@handleMessage command, args, new UdpConnection(fromHost, fromPort, @udpSocket)
 
-		@logging = false
 		@players = {}
 		@game = miaGame.createGame()
 		@game.setBroadcastTimeout @timeout
-		@socket = dgram.createSocket 'udp4', handleRawMessage
-		@socket.bind port
+		@udpSocket = dgram.createSocket 'udp4', handleRawMessage
+		@udpSocket.bind port
 
-	enableLogging: -> @logging = true
+	enableLogging: -> log = console.log
 
 	startGame: ->
 		@game.newRound()
@@ -37,7 +30,7 @@ class Server
 		@game.doNotStartRoundsEarly()
 
 	handleMessage: (messageCommand, messageArgs, connection) ->
-		console.log "handleMessage '#{messageCommand}' '#{messageArgs}' from #{connection.id}" if @logging
+		log "handleMessage '#{messageCommand}' '#{messageArgs}' from #{connection.id}"
 		if messageCommand == 'REGISTER'
 			name = messageArgs[0]
 			@handleRegistration name, connection, false
@@ -70,7 +63,7 @@ class Server
 		null
 
 	shutDown: ->
-		@socket.close()
+		@udpSocket.close()
 		@game.stop()
 
 	setDiceRoller: (diceRoller) ->
@@ -88,13 +81,26 @@ class Server
 		player.registered()
 
 	createPlayer: (name, connection) ->
-		sendMessageCallback = (message) =>
-			console.log "sending '#{message}' to #{name} (#{connection.id})" if @logging
-			buffer = new Buffer(message)
-			@socket.send buffer, 0, buffer.length, connection.port, connection.host
-		result = remotePlayer.create name, sendMessageCallback
-		result.remoteHost = connection.host
-		result
+		connection.createPlayer name
+		
+	class UdpConnection
+		constructor: (@host, @port, @socket) ->
+			@id = "#{@host}:#{@port}"
+	
+		belongsTo: (player) ->
+			player.remoteHost == @host
+	
+		createPlayer: (name) ->
+			sendMessageCallback = (message) =>
+				log "sending '#{message}' to #{name} (#{@id})"
+				buffer = new Buffer(message)
+				@socket.send buffer, 0, buffer.length, @port, @host
+			player = remotePlayer.create name, sendMessageCallback
+			
+			player.remoteHost = @host
+			player
+	
+
 
 exports.start = (port, timeout) ->
 	return new Server port, timeout
