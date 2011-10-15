@@ -3,6 +3,10 @@ dgram = require 'dgram'
 miaGame = require './miaGame'
 remotePlayer = require './remotePlayer'
 
+class UdpConnection
+	constructor: (@host, @port) ->
+		@id = "#{@host}:#{@port}"
+
 class Server
 	constructor: (port, @timeout) ->
 		handleRawMessage = (message, rinfo) =>
@@ -12,7 +16,7 @@ class Server
 			messageParts = message.toString().split ';'
 			command = messageParts[0]
 			args = messageParts[1..]
-			@handleMessage command, args, fromHost, fromPort
+			@handleMessage command, args, new UdpConnection(fromHost, fromPort)
 
 		@logging = false
 		@players = {}
@@ -29,32 +33,33 @@ class Server
 	doNotStartRoundsEarly: ->
 		@game.doNotStartRoundsEarly()
 
-	handleMessage: (messageCommand, messageArgs, fromHost, fromPort) ->
+	handleMessage: (messageCommand, messageArgs, connection) ->
+		console.log "handleMessage '#{messageCommand}' '#{messageArgs}' from #{connection.id}" if @logging
 		if messageCommand == 'REGISTER'
 			name = messageArgs[0]
-			@handleRegistration name, fromHost, fromPort, false
+			@handleRegistration name, connection, false
 		else if messageCommand == 'REGISTER_SPECTATOR'
 			name = messageArgs[0]
-			@handleRegistration name, fromHost, fromPort, true
+			@handleRegistration name, connection, true
 		else
-			player = @playerFor(fromHost, fromPort)
+			player = @playerFor connection
 			player?.handleMessage messageCommand, messageArgs
 	
-	handleRegistration: (name, fromHost, fromPort, isSpectator) ->
-		newPlayer = @createPlayer name, fromHost, fromPort
+	handleRegistration: (name, connection, isSpectator) ->
+		newPlayer = @createPlayer name, connection
 		unless @isValidName name
 			newPlayer.registrationRejected 'INVALID_NAME'
-		else if @nameIsTakenByAnotherPlayer name, fromHost
+		else if @nameIsTakenByAnotherPlayer name, connection
 			newPlayer.registrationRejected 'NAME_ALREADY_TAKEN'
 		else
-			@addPlayer fromHost, fromPort, newPlayer, isSpectator
+			@addPlayer connection, newPlayer, isSpectator
 
 	isValidName: (name) ->
 		name != '' and name.length <= 20 and not /[,;:\s]/.test name
 
-	nameIsTakenByAnotherPlayer: (name, newHost) ->
+	nameIsTakenByAnotherPlayer: (name, connection) ->
 		existingPlayer = @findPlayerByName(name)
-		existingPlayer and existingPlayer.remoteHost != newHost
+		existingPlayer and existingPlayer.remoteHost != connection.host
 
 	findPlayerByName: (name) ->
 		for key, player of @players
@@ -68,25 +73,25 @@ class Server
 	setDiceRoller: (diceRoller) ->
 		@game.setDiceRoller diceRoller
 	
-	playerFor: (host, port) ->
-		@players["#{host}:#{port}"]
+	playerFor: (connection) ->
+		@players[connection.id]
 	
-	addPlayer: (host, port, player, isSpectator) ->
-		@players["#{host}:#{port}"] = player
+	addPlayer: (connection, player, isSpectator) ->
+		@players[connection.id] = player
 		if isSpectator
 			@game.registerSpectator player
 		else
 			@game.registerPlayer player
 		player.registered()
 
-	createPlayer: (name, host, port) ->
+	createPlayer: (name, connection) ->
 		sendMessageCallback = (message) =>
-			console.log "sending '#{message}' to #{name} (#{host}:#{port})" if @logging
+			console.log "sending '#{message}' to #{name} (#{connection.id})" if @logging
 			buffer = new Buffer(message)
-			@socket.send buffer, 0, buffer.length, port, host
+			@socket.send buffer, 0, buffer.length, connection.port, connection.host
 		result = remotePlayer.create name, sendMessageCallback
-		result.remoteHost = host
+		result.remoteHost = connection.host
 		result
-	
+
 exports.start = (port, timeout) ->
 	return new Server port, timeout

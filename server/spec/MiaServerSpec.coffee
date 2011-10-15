@@ -50,8 +50,8 @@ describe 'mia server', ->
 		expect(player.registered).toHaveBeenCalled()
 
 	it 'should accept an updated registration from the same remote host', ->
-		server.handleMessage 'REGISTER', ['theName'], 'theHost', 'theOldPort'
-		server.handleMessage 'REGISTER', ['theName'], 'theHost', 'theNewPort'
+		server.handleMessage 'REGISTER', ['theName'], {host: 'theHost', port: 'theOldPort', id: 'theHost:theOldPort'}
+		server.handleMessage 'REGISTER', ['theName'], {host: 'theHost', port: 'theNewPort', id: 'theHost:theNewPort'}
 		expect(server.game.registerPlayer.callCount).toBe 2
 		expect(player.registered).toHaveBeenCalled()
 		expect(player.registrationRejected).not.toHaveBeenCalled()
