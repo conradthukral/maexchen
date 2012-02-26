@@ -70,10 +70,11 @@ describe 'Mia Game', ->
 		expect(miaGame.players).toHavePlayer newPlayer
 		expect(miaGame.players).not.toHavePlayer oldPlayer
 
-	it 'calls permute on current round', ->
-		spyOn miaGame.currentRound, 'permute'
-		miaGame.permuteCurrentRound()
-		expect(miaGame.currentRound.permute).toHaveBeenCalled()
+	it 'delegates permute to the round', ->
+		round = permute: ->
+		spyOn round, 'permute'
+		miaGame.permuteRound(round)
+		expect(round.permute).toHaveBeenCalled()
 
 	describe 'new round', ->
 
@@ -212,12 +213,12 @@ describe 'Mia Game', ->
 	describe 'start round', ->
 
 		it 'should permute the current round when starting a new round', ->
-			spyOn miaGame, 'permuteCurrentRound'
+			spyOn miaGame, 'permuteRound'
 			miaGame.startRound()
-			expect(miaGame.permuteCurrentRound).toHaveBeenCalled()
+			expect(miaGame.permuteRound).toHaveBeenCalledWith miaGame.currentRound
 
 		it 'should notify all players when starting a new round', ->
-			miaGame.permuteCurrentRound = ->
+			miaGame.permuteRound = ->
 			registerPlayers 1, 2
 			spyOn player1, 'roundStarted'
 			spyOn player2, 'roundStarted'

@@ -86,7 +86,7 @@ class MiaGame
 			player.willJoinRound expirer.makeExpiring(answerJoining)
 
 	startRound: ->
-		@permuteCurrentRound()
+		@permuteRound(@currentRound)
 		@actualDice = null
 		@announcedDice = null
 		@currentRound.each (player) =>
@@ -104,7 +104,7 @@ class MiaGame
 		@broadcastScore()
 		@newRound()
 
-	permuteCurrentRound: -> @currentRound.permute()
+	permuteRound: (round) -> round.permute()
 
 	nextTurn: ->
 		[@currentPlayer, @lastPlayer] = @currentRound.nextPlayer()

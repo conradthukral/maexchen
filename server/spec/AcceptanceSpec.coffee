@@ -5,26 +5,33 @@ dice = require '../lib/dice'
 timeoutForClientAnswers = 100
 serverPort = 9000
 server = null
+enableLogging = false
 
 setupFakeClient = (clientName) ->
 	result = new FakeUdpClient serverPort, clientName
+	result.enableLogging() if enableLogging
 	result.sendPlayerRegistration()
 	result.receivesRegistrationConfirmation()
 	result
 
 setupSpectator = (clientName) ->
 	result = new FakeUdpClient serverPort, clientName
+	result.enableLogging() if enableLogging
 	result.sendSpectatorRegistration()
 	result.receivesRegistrationConfirmation()
 	result
 		
-keepServerFromPermutingThePlayers = ->
-	server.game.permuteCurrentRound = ->
+serverAlwaysOrdersPlayersAlphabeticallyInNewRounds = ->
+	server.game.permuteRound = (playerList) ->
+		playerList.players.sort (player1, player2) ->
+			return 0 if player1.name == player2.name
+			if player1.name > player2.name then 1 else -1
 
 describe 'the Mia server', ->
 
 	beforeEach ->
 		server = miaServer.start serverPort, timeoutForClientAnswers
+		server.enableLogging() if enableLogging
 		server.rolls = (die1, die2) ->
 			@setDiceRoller new FakeDiceRoller dice.create(die1, die2)
 
@@ -113,7 +120,7 @@ describe 'the Mia server', ->
 			oldPlayer = setupFakeClient 'thePlayer'
 			otherPlayer = setupFakeClient 'theOtherPlayer'
 			server.rolls 3, 1
-			keepServerFromPermutingThePlayers()
+			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
 			runs -> server.startGame()
 
 		afterEach ->
@@ -155,7 +162,7 @@ describe 'the Mia server', ->
 		eachPlayer = null
 
 		beforeEach ->
-			keepServerFromPermutingThePlayers()
+			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
 			eachPlayer = new MultipleClients [client1, client2]
@@ -226,7 +233,7 @@ describe 'the Mia server', ->
 		eachPlayer = null
 
 		beforeEach ->
-			keepServerFromPermutingThePlayers()
+			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
 			client3 = setupFakeClient 'client3'
