@@ -2,6 +2,11 @@ miaServer = require '../lib/miaServer'
 
 describe 'mia server', ->
 
+	game =
+		registerPlayer: ->
+		registerSpectator: ->
+		stop: ->
+
 	server = connection = null
 	player =
 		name: 'theName'
@@ -10,15 +15,15 @@ describe 'mia server', ->
 		registrationRejected: ->
 
 	beforeEach ->
-		server = miaServer.start()
+		server = miaServer.start game
 		connection =
 			host: 'theHost'
 			id: 'theHost:thePort'
 
 		spyOn player, 'registered'
 		spyOn player, 'registrationRejected'
-		spyOn server.game, 'registerPlayer'
-		spyOn server.game, 'registerSpectator'
+		spyOn game, 'registerPlayer'
+		spyOn game, 'registerSpectator'
 		spyOn(server, 'createPlayer').andReturn player
 
 	afterEach ->
@@ -32,7 +37,7 @@ describe 'mia server', ->
 
 	it 'should accept registrations', ->
 		server.handleMessage 'REGISTER', ['theName'], connection
-		expect(server.game.registerPlayer).toHaveBeenCalled()
+		expect(game.registerPlayer).toHaveBeenCalled()
 		expect(player.registered).toHaveBeenCalled()
 
 	it 'should accept spectator registrations', ->
@@ -72,9 +77,4 @@ describe 'mia server', ->
 		expect(server.game.registerPlayer.callCount).toBe 1
 		expect(player.registrationRejected).toHaveBeenCalledWith 'NAME_ALREADY_TAKEN'
 		expect(player.registered.callCount).toBe 1
-
-	it 'should allow to configure whether the game starts rounds early', ->
-		spyOn server.game, 'doNotStartRoundsEarly'
-		server.doNotStartRoundsEarly()
-		expect(server.game.doNotStartRoundsEarly).toHaveBeenCalled()
 

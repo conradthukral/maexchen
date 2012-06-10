@@ -1,9 +1,11 @@
 dgram = require 'dgram'
+miaGame = require '../lib/miaGame'
 miaServer = require '../lib/miaServer'
 dice = require '../lib/dice'
 
 timeoutForClientAnswers = 100
 serverPort = 9000
+game = null
 server = null
 enableLogging = false
 
@@ -22,20 +24,24 @@ setupSpectator = (clientName) ->
 	result
 		
 serverAlwaysOrdersPlayersAlphabeticallyInNewRounds = ->
-	server.game.permuteRound = (playerList) ->
+	game.permuteRound = (playerList) ->
 		playerList.players.sort (player1, player2) ->
 			return 0 if player1.name == player2.name
 			if player1.name > player2.name then 1 else -1
 
+serverRolls = (die1, die2) ->
+	game.setDiceRoller new FakeDiceRoller dice.create(die1, die2)
+
 describe 'the Mia server', ->
 
 	beforeEach ->
-		server = miaServer.start serverPort, timeoutForClientAnswers
+		game = miaGame.createGame()
+		game.setBroadcastTimeout timeoutForClientAnswers
+		server = miaServer.start game, serverPort
 		server.enableLogging() if enableLogging
-		server.rolls = (die1, die2) ->
-			@setDiceRoller new FakeDiceRoller dice.create(die1, die2)
 
 	afterEach ->
+		game.stop()
 		server.shutDown()
 
 	describe 'player setup', ->
@@ -58,7 +64,7 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			client = setupFakeClient 'testClient'
-			runs -> server.startGame()
+			runs -> game.start()
 
 		afterEach ->
 			client.shutDown()
@@ -77,7 +83,7 @@ describe 'the Mia server', ->
 		beforeEach ->
 			spectator = setupSpectator 'theSpectator'
 			player = setupFakeClient 'thePlayer'
-			runs -> server.startGame()
+			runs -> game.start()
 
 		afterEach ->
 			spectator.shutDown()
@@ -98,7 +104,7 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			player = setupFakeClient 'thePlayer'
-			runs -> server.startGame()
+			runs -> game.start()
 
 		afterEach ->
 			player.shutDown()
@@ -119,9 +125,9 @@ describe 'the Mia server', ->
 		beforeEach ->
 			oldPlayer = setupFakeClient 'thePlayer'
 			otherPlayer = setupFakeClient 'theOtherPlayer'
-			server.rolls 3, 1
+			serverRolls 3, 1
 			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
-			runs -> server.startGame()
+			runs -> game.start()
 
 		afterEach ->
 			oldPlayer.shutDown()
@@ -166,7 +172,7 @@ describe 'the Mia server', ->
 			client1 = setupFakeClient 'client1'
 			client2 = setupFakeClient 'client2'
 			eachPlayer = new MultipleClients [client1, client2]
-			runs -> server.startGame()
+			runs -> game.start()
 
 		afterEach ->
 			eachPlayer.shutDown()
@@ -179,7 +185,7 @@ describe 'the Mia server', ->
 			client1.isAskedToPlayATurn()
 			client1.rolls()
 			eachPlayer.receivesNotificationThatPlayerRolls 'client1'
-			server.rolls 6, 6
+			serverRolls 6, 6
 			client1.receivesRolledDice dice.create(6, 6)
 			client1.announcesDice dice.create(6, 6)
 
@@ -200,7 +206,7 @@ describe 'the Mia server', ->
 			
 			client1.isAskedToPlayATurn()
 			client1.rolls()
-			server.rolls 4, 4
+			serverRolls 4, 4
 			client1.receivesRolledDice dice.create(4, 4)
 			client1.announcesDice dice.create(6, 6)
 
@@ -238,13 +244,13 @@ describe 'the Mia server', ->
 			client2 = setupFakeClient 'client2'
 			client3 = setupFakeClient 'client3'
 			eachPlayer = new MultipleClients [client1, client2, client3]
-			runs -> server.startGame()
+			runs -> game.start()
 
 		afterEach ->
 			eachPlayer.shutDown()
 
 		it 'when mia is announced, all other players immediately lose', ->
-			server.rolls 2, 1
+			serverRolls 2, 1
 			eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
 			
@@ -259,7 +265,7 @@ describe 'the Mia server', ->
 			eachPlayer.receivesScores client1: 1, client2: 0, client3: 0
 
 		it 'when mia is announced wrongly, player immediately loses', ->
-			server.rolls 3, 1
+			serverRolls 3, 1
 			eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
 			

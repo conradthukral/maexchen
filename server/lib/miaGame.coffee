@@ -63,6 +63,8 @@ class MiaGame
 	setBroadcastTimeout: (@broadcastTimeout) ->
 	setDiceRoller: (@diceRoller) ->
 	doNotStartRoundsEarly: -> @startRoundsEarly = false
+
+	start: -> @newRound() if @roundNumber == 0
 	stop: -> @stopped = true
 
 	newRound: ->

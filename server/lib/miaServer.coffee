@@ -5,7 +5,7 @@ remotePlayer = require './remotePlayer'
 
 class Server
 	log = ->
-	constructor: (port, @timeout) ->
+	constructor: (@game, port) ->
 		handleRawMessage = (message, rinfo) =>
 			fromHost = rinfo.address
 			fromPort = rinfo.port
@@ -16,18 +16,10 @@ class Server
 			@handleMessage command, args, new UdpConnection(fromHost, fromPort, @udpSocket)
 
 		@players = {}
-		@game = miaGame.createGame()
-		@game.setBroadcastTimeout @timeout
 		@udpSocket = dgram.createSocket 'udp4', handleRawMessage
 		@udpSocket.bind port
 
 	enableLogging: -> log = console.log
-
-	startGame: ->
-		@game.newRound()
-	
-	doNotStartRoundsEarly: ->
-		@game.doNotStartRoundsEarly()
 
 	handleMessage: (messageCommand, messageArgs, connection) ->
 		log "handleMessage '#{messageCommand}' '#{messageArgs}' from #{connection.id}"
@@ -64,11 +56,7 @@ class Server
 
 	shutDown: ->
 		@udpSocket.close()
-		@game.stop()
 
-	setDiceRoller: (diceRoller) ->
-		@game.setDiceRoller diceRoller
-	
 	playerFor: (connection) ->
 		@players[connection.id]
 	
@@ -102,5 +90,5 @@ class Server
 	
 
 
-exports.start = (port, timeout) ->
-	return new Server port, timeout
+exports.start = (game, port) ->
+	return new Server game, port
