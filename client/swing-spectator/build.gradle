@@ -16,6 +16,14 @@ dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 
+jar {
+	manifest {
+		attributes 'Main-Class': 'spectator.Main'
+	}
+  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+
 task sourcesJar(type: Jar, dependsOn:classes) {
 	classifier = 'sources'
 	from sourceSets.main.allSource
