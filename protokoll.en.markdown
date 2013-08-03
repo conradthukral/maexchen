@@ -11,7 +11,7 @@ Preliminaries
 
 Registration
 ------------
-- client->server: `REGISTER:name`
+- client->server: `REGISTER;name`
 - client->server: `REGISTER_SPECTATOR;name`
 
 Valid names need to satisfy the following criteria:
