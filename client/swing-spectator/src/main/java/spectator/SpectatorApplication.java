@@ -30,6 +30,8 @@ import javax.swing.JSplitPane;
 
 public class SpectatorApplication {
 
+  private ServerInfo serverInfo;
+
 	private JFrame frmMxchen;
 	private JTextPane roundText;
 	private JScrollPane scrollPane;
@@ -44,11 +46,13 @@ public class SpectatorApplication {
 	private ChartPanel chartPanel;
 	private TimeSeriesCollection pointsPerMinute;
 	private JSplitPane splitPane;
+  private JLabel lblServerInfo;
 
 	/**
 	 * Create the application.
 	 */
-	public SpectatorApplication() {
+	public SpectatorApplication(ServerInfo serverInfo) {
+    this.serverInfo = serverInfo;
 		initialize();
 		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
 				new IncrementProgressBar(progressBar, 1), 1, 1,
@@ -133,6 +137,9 @@ public class SpectatorApplication {
 		progressBar.setValue(10);
 		progressBar.setMaximum(10);
 		leftColumn.add(progressBar, "cell 1 2,growx,aligny top");
+
+    lblServerInfo = new JLabel(String.format("Server Hostname/IP: %s, Port: %s", serverInfo.host, serverInfo.port));
+    leftColumn.add(lblServerInfo, "cell 0 3 2");
 
 		splitPane = new JSplitPane();
 		splitPane.setResizeWeight(1.0);

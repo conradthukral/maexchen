@@ -17,8 +17,9 @@ public class Main {
 		
 		final String serverHost = args[0];
 		final int serverPort = Integer.parseInt(args[1]);
+    final ServerInfo serverInfo = new ServerInfo(serverHost, serverPort);
 		
-		final SpectatorApplication window = new SpectatorApplication();
+		final SpectatorApplication window = new SpectatorApplication(serverInfo);
 
 		RoundListener roundListener = new ThrottlingRoundListener(new RoundListener() {
 			public void roundCompleted(int roundNumber, String completeRound) {
