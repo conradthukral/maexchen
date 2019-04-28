@@ -13,7 +13,7 @@ public class Main {
 		random
 	}
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String... args) throws IOException {
 		String serverHost = args[0];
 		int serverPort = Integer.parseInt(args[1]);
 		String clientName = args[2];

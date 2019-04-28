@@ -25,12 +25,16 @@ public class SimpleBot implements MessageListener {
 	public void onMessage(String message) {
 		System.out.println(message);
 		String[] parts = message.split(";");
-		if (parts[0].equals("ROUND STARTING")) {
-			tryToSend("JOIN;"+parts[1]);
-		} else if (parts[0].equals("YOUR TURN")) {
-			tryToSend("ROLL;"+parts[1]);
-		} else if (parts[0].equals("ROLLED")) {
-			tryToSend("ANNOUNCE;" + parts[1] + ";" + parts[2]);
+		switch (parts[0]) {
+			case "ROUND STARTING":
+				tryToSend("JOIN;" + parts[1]);
+				break;
+			case "YOUR TURN":
+				tryToSend("ROLL;" + parts[1]);
+				break;
+			case "ROLLED":
+				tryToSend("ANNOUNCE;" + parts[1] + ";" + parts[2]);
+				break;
 		}
 	}
 

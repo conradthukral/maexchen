@@ -25,16 +25,20 @@ public class RandomBot implements MessageListener {
 	public void onMessage(String message) {
 		System.out.println(message);
 		String[] parts = message.split(";");
-		if (parts[0].equals("ROUND STARTING")) {
-			tryToSend("JOIN;"+parts[1]);
-		} else if (parts[0].equals("YOUR TURN")) {
-			if (Math.random() < 0.8) {
-				tryToSend("ROLL;"+parts[1]);
-			} else {
-				tryToSend("SEE;"+parts[1]);
-			}
-		} else if (parts[0].equals("ROLLED")) {
-			tryToSend("ANNOUNCE;" + parts[1] + ";" + parts[2]);
+		switch (parts[0]) {
+			case "ROUND STARTING":
+				tryToSend("JOIN;" + parts[1]);
+				break;
+			case "YOUR TURN":
+				if (Math.random() < 0.8) {
+					tryToSend("ROLL;" + parts[1]);
+				} else {
+					tryToSend("SEE;" + parts[1]);
+				}
+				break;
+			case "ROLLED":
+				tryToSend("ANNOUNCE;" + parts[1] + ";" + parts[2]);
+				break;
 		}
 	}
 

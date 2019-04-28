@@ -8,18 +8,19 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 
 public class UdpCommunicator {
 
 	private static final int ONE_SECOND = 1000;
-	private static final Charset UTF8 = Charset.forName("utf-8");
+	private static final Charset UTF8 = StandardCharsets.UTF_8;
 
 	private final String remoteHost;
 	private final int remotePort;
 
-	private final Collection<MessageListener> listeners = new ArrayList<MessageListener>();
+	private final Collection<MessageListener> listeners = new ArrayList<>();
 	private final DatagramChannel channel;
 
 	/**
@@ -44,11 +45,9 @@ public class UdpCommunicator {
 	}
 
 	public MessageSender getMessageSender() {
-		return new MessageSender() {
-			public void send(String message) throws IOException {
-				InetSocketAddress destination = new InetSocketAddress(remoteHost, remotePort);
-				channel.send(UTF8.encode(message), destination);
-			}
+		return message -> {
+			InetSocketAddress destination = new InetSocketAddress(remoteHost, remotePort);
+			channel.send(UTF8.encode(message), destination);
 		};
 	}
 	
@@ -89,9 +88,7 @@ public class UdpCommunicator {
 
 	private void readIncomingMessage() throws IOException {
 		String message = readMessageFromChannel();
-		for (MessageListener listener : listeners) {
-			listener.onMessage(message);
-		}
+		listeners.forEach(listener -> listener.onMessage(message));
 	}
 
 	private String readMessageFromChannel() throws IOException {
@@ -99,8 +96,7 @@ public class UdpCommunicator {
 		channel.receive(bytes);
 		bytes.flip();
 		CharBuffer decoded = UTF8.decode(bytes);
-		String message = decoded.toString();
-		return message;
+		return decoded.toString();
 	}
 
 }
