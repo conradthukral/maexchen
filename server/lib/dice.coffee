@@ -31,6 +31,7 @@ exports.create = (die1, die2) ->
 	new Dice(die1, die2)
 
 exports.parse = (string) ->
+	return false unless string
 	dice = string.split ','
 	die1 = parseInt dice[0]
 	die2 = parseInt dice[1]

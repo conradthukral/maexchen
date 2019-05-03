@@ -33,6 +33,7 @@ describe "remotePlayer", ->
 
 		it 'should ignore invalid messages ', ->
 			player.handleMessage 'JOIN', ['wrongToken']
+			player.handleMessage 'JOIN', []
 			player.handleMessage 'ROLL', ['theToken']
 			expect(mySpy.callback).not.toHaveBeenCalled()
 
@@ -58,6 +59,7 @@ describe "remotePlayer", ->
 		it 'should ignore invalid messages', ->
 			player.handleMessage 'JOIN', ['theToken']
 			player.handleMessage 'ROLL', ['wrongToken']
+			player.handleMessage 'ROLL', []
 			expect(mySpy.callback).not.toHaveBeenCalled()
 
 			player.handleMessage 'ROLL', ['theToken']
@@ -78,7 +80,9 @@ describe "remotePlayer", ->
 		it 'should ignore invalid messages', ->
 			player.handleMessage 'ANNOUNCE', ['3,1', 'wrongToken']
 			player.handleMessage 'ANNOUNCE', ['invalidDice', 'theToken']
+			player.handleMessage 'ANNOUNCE', []
 			player.handleMessage 'JOIN', ['theToken']
+			player.handleMessage 'JOIN', []
 			expect(mySpy.callback).not.toHaveBeenCalled()
 
 			player.handleMessage 'ANNOUNCE', ['2,1', 'theToken']

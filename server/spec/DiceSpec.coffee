@@ -75,3 +75,5 @@ describe 'dice', ->
 			expect(dice.parse '6,66').toBeFalsy()
 			expect(dice.parse '-1,1').toBeFalsy()
 			expect(dice.parse '1,-1').toBeFalsy()
+			expect(dice.parse '').toBeFalsy()
+			expect(dice.parse undefined).toBeFalsy()
