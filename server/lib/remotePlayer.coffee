@@ -1,4 +1,4 @@
-uuid = require 'node-uuid'
+uuid = require 'uuid/v4'
 
 miaGame = require './miaGame'
 dice = require './dice'
