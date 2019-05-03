@@ -68,4 +68,10 @@ describe 'dice', ->
 
 		it 'should not parse garbage', ->
 			expect(dice.parse 'garbage').toBeFalsy()
-
+			expect(dice.parse '6,7').toBeFalsy()
+			expect(dice.parse '7,6').toBeFalsy()
+			expect(dice.parse '0,6').toBeFalsy()
+			expect(dice.parse '6,0').toBeFalsy()
+			expect(dice.parse '6,66').toBeFalsy()
+			expect(dice.parse '-1,1').toBeFalsy()
+			expect(dice.parse '1,-1').toBeFalsy()

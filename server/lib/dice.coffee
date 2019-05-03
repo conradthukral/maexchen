@@ -25,6 +25,8 @@ class Dice
 		result += 200 if @isMia()
 		result
 
+isValidDie = (die) -> 1 <= die <= 6
+
 exports.create = (die1, die2) ->
 	new Dice(die1, die2)
 
@@ -32,7 +34,7 @@ exports.parse = (string) ->
 	dice = string.split ','
 	die1 = parseInt dice[0]
 	die2 = parseInt dice[1]
-	if die1 and die2
+	if isValidDie(die1) and isValidDie(die2)
 		new Dice die1, die2
 	else
 		false
