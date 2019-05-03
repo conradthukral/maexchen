@@ -22,16 +22,19 @@ class Server
 	enableLogging: -> log = console.log
 
 	handleMessage: (messageCommand, messageArgs, connection) ->
-		log "handleMessage '#{messageCommand}' '#{messageArgs}' from #{connection.id}"
-		if messageCommand == 'REGISTER'
-			name = messageArgs[0]
-			@handleRegistration name, connection, false
-		else if messageCommand == 'REGISTER_SPECTATOR'
-			name = messageArgs[0]
-			@handleRegistration name, connection, true
-		else
-			player = @playerFor connection
-			player?.handleMessage messageCommand, messageArgs
+		try 
+			log "handleMessage '#{messageCommand}' '#{messageArgs}' from #{connection.id}"
+			if messageCommand == 'REGISTER'
+				name = messageArgs[0]
+				@handleRegistration name, connection, false
+			else if messageCommand == 'REGISTER_SPECTATOR'
+				name = messageArgs[0]
+				@handleRegistration name, connection, true
+			else
+				player = @playerFor connection
+				player?.handleMessage messageCommand, messageArgs
+		catch error
+			log "ERROR in handleMessage: #{error}"
 	
 	handleRegistration: (name, connection, isSpectator) ->
 		newPlayer = @createPlayer name, connection

@@ -13,12 +13,14 @@ describe 'mia server', ->
 		remoteHost: 'theHost'
 		registered: ->
 		registrationRejected: ->
+		handleMessage: ->
 
 	beforeEach ->
 		server = miaServer.start game
 		connection =
 			host: 'theHost'
 			id: 'theHost:thePort'
+			belongsTo: ->
 
 		spyOn player, 'registered'
 		spyOn player, 'registrationRejected'
@@ -78,3 +80,18 @@ describe 'mia server', ->
 		expect(player.registrationRejected).toHaveBeenCalledWith 'NAME_ALREADY_TAKEN'
 		expect(player.registered.callCount).toBe 1
 
+	it 'should pass in-game messages on to the relevant player', ->
+		spyOn(connection, 'belongsTo').andReturn true
+		spyOn(player, 'handleMessage')
+
+		server.addPlayer connection, player, false
+		server.handleMessage 'SOME_COMMAND', ['ARGUMENT'], connection
+
+		expect(player.handleMessage).toHaveBeenCalledWith 'SOME_COMMAND', ['ARGUMENT']
+		
+	it 'should catch any player exceptions', ->
+		spyOn(connection, 'belongsTo').andReturn true
+		spyOn(player, 'handleMessage').andThrow 'error'
+
+		server.addPlayer connection, player, false
+		server.handleMessage 'SOME_COMMAND', ['ARGUMENT'], connection
