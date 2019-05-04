@@ -84,7 +84,7 @@ class Server
 		createPlayer: (name) ->
 			sendMessageCallback = (message) =>
 				log "sending '#{message}' to #{name} (#{@id})"
-				buffer = new Buffer(message)
+				buffer = Buffer.from(message)
 				@socket.send buffer, 0, buffer.length, @port, @host
 			player = remotePlayer.create name, sendMessageCallback
 			

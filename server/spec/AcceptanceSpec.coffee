@@ -409,7 +409,7 @@ class FakeUdpClient extends BaseFakeClient
 
 	send: (string) ->
 		@log "[#{@name}] sending #{string}"
-		buffer = new Buffer(string)
+		buffer = Buffer.from(string)
 		@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
 
 	shutDown: () ->
