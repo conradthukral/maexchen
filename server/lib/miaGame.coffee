@@ -209,4 +209,3 @@ exports.Messages = Messages
 exports.classes =
 	MiaGame: MiaGame
 	PlayerList: PlayerList
-

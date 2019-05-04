@@ -1,3 +1,7 @@
+mia = require '../lib/miaGame'
+dice = require '../lib/dice'
+{ delay, waitFor } = require './waitUtils'
+
 class PlayerStub
 	constructor: (@name) ->
 	willJoinRound: ->
@@ -11,9 +15,6 @@ class PlayerStub
 	currentScore: ->
 	playerRolls: ->
 	playerWantsToSee: ->
-
-mia = require '../lib/miaGame'
-dice = require '../lib/dice'
 
 describe 'Mia Game', ->
 	miaGame = player1 = player2 = player3 = player4 = registerPlayers = null
@@ -30,8 +31,13 @@ describe 'Mia Game', ->
 		player2 = players[1]
 		player3 = players[2]
 		player4 = players[3]
-		this.addMatchers
-			toHavePlayer: (player) -> this.actual.hasPlayer player
+		jasmine.addMatchers
+			toHavePlayer: ->
+				compare: (actual, expected) ->
+					passed = actual.hasPlayer expected
+					result =
+						pass: passed
+						message: "expected #{actual.players}#{' not' unless passed} to have player #{expected.name}"
 
 		registerPlayers = (numbers...) ->
 			for number in numbers
@@ -109,28 +115,23 @@ describe 'Mia Game', ->
 
 		it 'should not accept joins for the current round after timeout', ->
 			miaGame.setBroadcastTimeout 20
-			runs ->
-				player1.willJoinRound = (joinRound) ->
-					setTimeout (-> joinRound(true)), 40
-				miaGame.newRound()
-			waits 60
-			runs ->
+			player1.willJoinRound = (joinRound) -> setTimeout (-> joinRound(true)), 40
+			miaGame.newRound()
+			await delay 60, ->
 				expect(miaGame.currentRound).not.toHavePlayer player1
 
 		it 'should not have joins for first round in second round', ->
-			firstRound = secondRound = null
-			runs ->
-				player1.willJoinRound = (joinRound) ->
-					setTimeout (-> joinRound(true)), 40
-				miaGame.newRound()
-				firstRound = miaGame.currentRound
-			waits 20
-			runs ->
+			player1.willJoinRound = (joinRound) ->
+				setTimeout (-> joinRound(true)), 40
+			miaGame.newRound()
+			firstRound = miaGame.currentRound
+			
+			secondRound = await delay 20, ->
 				player1.willJoinRound = ->
 				miaGame.newRound()
-				secondRound = miaGame.currentRound
-			waits 30
-			runs ->
+				miaGame.currentRound
+
+			await delay 20, ->
 				expect(firstRound).not.toBe secondRound
 				expect(firstRound).toHavePlayer player1
 				expect(secondRound).not.toHavePlayer player1
@@ -148,10 +149,11 @@ describe 'Mia Game', ->
 			player2.willJoinRound = accept
 			miaGame.setBroadcastTimeout 20
 			miaGame.doNotStartRoundsEarly()
-			runs ->
-				miaGame.newRound()
-				expect(miaGame.startRound).not.toHaveBeenCalled()
-			waitsFor (-> miaGame.startRound.wasCalled), 30
+
+			miaGame.newRound()
+			expect(miaGame.startRound).not.toHaveBeenCalled()
+
+			waitFor 30, -> miaGame.startRound.calls.any()
 
 		it 'should neither start round nor cancel it when only spectators are in the game', ->
 			spyOn miaGame, 'startRound'
@@ -159,46 +161,42 @@ describe 'Mia Game', ->
 			miaGame.players = new mia.classes.PlayerList()
 			miaGame.registerSpectator player1
 			miaGame.setBroadcastTimeout 20
-			runs ->
-				miaGame.newRound()
-				expect(miaGame.startRound).not.toHaveBeenCalled()
-				expect(miaGame.cancelRound).not.toHaveBeenCalled()
-			waits 40
-			runs ->
+			
+			miaGame.newRound()
+			expect(miaGame.startRound).not.toHaveBeenCalled()
+			expect(miaGame.cancelRound).not.toHaveBeenCalled()
+
+			await delay 40, ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 				expect(miaGame.cancelRound).not.toHaveBeenCalled()
 
 		it 'should start round after timeout when players are missing', ->
 			spyOn miaGame, 'startRound'
 			miaGame.setBroadcastTimeout 40
-			runs ->
-				player1.willJoinRound = accept
-				miaGame.newRound()
-			waits 20
-			runs ->
+			player1.willJoinRound = accept
+			miaGame.newRound()
+			await delay 20, ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
-			waitsFor (-> miaGame.startRound.wasCalled), 30
+			await waitFor 30, -> miaGame.startRound.calls.any()
 			
 		it 'should cancel the round when nobody joins', ->
 			spyOn miaGame, 'cancelRound'
 			spyOn miaGame, 'startRound'
 			miaGame.setBroadcastTimeout 20
-			runs ->
-				miaGame.newRound()
-			waitsFor (-> miaGame.cancelRound.wasCalled), 40
-			runs ->
-				expect(miaGame.cancelRound).toHaveBeenCalledWith 'NO_PLAYERS'
-				expect(miaGame.startRound).not.toHaveBeenCalled()
+			miaGame.newRound()
+			await waitFor 40, -> miaGame.cancelRound.calls.any()
+			expect(miaGame.cancelRound).toHaveBeenCalledWith 'NO_PLAYERS'
+			expect(miaGame.startRound).not.toHaveBeenCalled()
 
 		it 'should not start a round after the game is stopped', ->
 			spyOn miaGame, 'startRound'
 			miaGame.setBroadcastTimeout 20
 			player1.willJoinRound = accept
-			runs ->
-				miaGame.newRound()
-				miaGame.stop()
-			waits 30
-			runs ->
+		
+			miaGame.newRound()
+			miaGame.stop()
+		
+			await delay 30, ->
 				expect(miaGame.startRound).not.toHaveBeenCalled()
 
 		it 'should set the round number to 1 for the first round', ->
@@ -342,21 +340,21 @@ describe 'Mia Game', ->
 		it 'should call currentPlayerLoses, when player answers after timeout', ->
 			spyOn miaGame, 'currentPlayerLoses'
 			spyOn miaGame, 'rollDice'
-			runs ->
-				player1.yourTurn = (question) -> setTimeout (-> roll(question)), 30
-				miaGame.nextTurn()
-			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
-			runs ->
+
+			player1.yourTurn = (question) -> setTimeout (-> roll(question)), 30
+			miaGame.nextTurn()
+
+			await delay 50, ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalled()
 				expect(miaGame.rollDice).not.toHaveBeenCalled()
 
 		it 'should call currentPlayerLoses, when player does not answer', ->
 			spyOn miaGame, 'currentPlayerLoses'
-			runs ->
-				player1.yourTurn = ->
-				miaGame.nextTurn()
-			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
-			runs ->
-				expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'DID_NOT_TAKE_TURN'
+			player1.yourTurn = ->
+			miaGame.nextTurn()
+			
+			await waitFor 50, -> miaGame.currentPlayerLoses.calls.any()
+			expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'DID_NOT_TAKE_TURN'
 
 	describe 'roll dice', ->
 		diceRoller =
@@ -372,8 +370,7 @@ describe 'Mia Game', ->
 		it 'should inform the player about their roll', ->
 			spyOn player1, 'yourRoll'
 			miaGame.rollDice()
-			expect(player1.yourRoll).toHaveBeenCalled()
-			expect(player1.yourRoll.mostRecentCall.args[0]).toBe 'theDice'
+			expect(player1.yourRoll).toHaveBeenCalledWith 'theDice', jasmine.anything()
 
 		it 'should store the actual roll', ->
 			miaGame.rollDice()
@@ -394,19 +391,20 @@ describe 'Mia Game', ->
 
 		it 'should make the player lose, when she does not announce within time', ->
 			spyOn miaGame, 'announce'
-			runs ->
-				player1.yourRoll = (dice, announce) -> setTimeout announce, 30
-				miaGame.rollDice()
-			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
-			runs ->
+			player1.yourRoll = (dice, announce) -> setTimeout announce, 30
+
+			miaGame.rollDice()
+
+			await delay 50, ->
+				expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'DID_NOT_ANNOUNCE'
 				expect(miaGame.announce).not.toHaveBeenCalled()
 
 		it 'should make the player lose, when she does not announce', ->
-			runs ->
-				player1.yourRoll = (dice, announce) ->
-				miaGame.rollDice()
-			waitsFor (-> miaGame.currentPlayerLoses.wasCalled), 50
-			runs ->
+			player1.yourRoll = (dice, announce) ->
+
+			miaGame.rollDice()
+
+			await delay 50, ->
 				expect(miaGame.currentPlayerLoses).toHaveBeenCalledWith 'DID_NOT_ANNOUNCE'
 
 		it 'should do nothing if the game is stopped', ->
@@ -654,16 +652,14 @@ describe 'permutation', ->
 	list1 = list2 = {}
 
 	beforeEach ->
-		this.addMatchers
-
-			toHaveEqualLength: (other) ->
-				this.actual.length == other.length
-
-			toEqualArray: (other) ->
-				return false unless this.actual.length == other.length
-				for key, value of other
-					return false unless this.actual[key] == value
-				true
+		jasmine.addMatchers
+			toHaveEqualLength: ->
+				compare: (actual, expected) ->
+					passed = actual.length == expected.length
+					result =
+						pass: passed
+						message: "Expected #{actual}#{' not' unless passed} to have same length as #{expected}"
+					result
 
 		list1 = new mia.classes.PlayerList
 		list2 = new mia.classes.PlayerList
@@ -673,12 +669,12 @@ describe 'permutation', ->
 			list2.add player
 
 	it 'should have same number of objects after permutation', ->
-			expect(list1.players).toEqualArray(list2.players)
-			list1.permute()
-			expect(list1.players).toHaveEqualLength(list2.players)
+		expect(list1.players).toEqual(list2.players)
+		list1.permute()
+		expect(list1.players).toHaveEqualLength(list2.players)
 
 	it 'should not have same order of objects after permutation', ->
-			expect(list1.players).toEqualArray(list2.players)
-			list1.permute()
-			expect(list1.players).not.toEqualArray(list2.players)
+		expect(list1.players).toEqual(list2.players)
+		list1.permute()
+		expect(list1.players).not.toEqual(list2.players)
 

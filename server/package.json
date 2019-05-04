@@ -1,6 +1,6 @@
 {
 	"name": "maexchen-server",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"directories": {
 		"lib": "lib"
 	},
@@ -9,11 +9,14 @@
 		"lib",
 		"package.json"
 	],
+	"scripts": {
+		"test": "jasmine"
+	},
 	"dependencies": {
 		"coffeescript": "2.4.x",
 		"uuid": "3.3.x"
 	},
 	"devDependencies": {
-		"jasmine-node": "1.16.x"
+		"jasmine": "3.4.x"
 	}
 }

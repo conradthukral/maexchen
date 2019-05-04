@@ -2,6 +2,7 @@ dgram = require 'dgram'
 miaGame = require '../lib/miaGame'
 miaServer = require '../lib/miaServer'
 dice = require '../lib/dice'
+{ delay, waitFor } = require './waitUtils'
 
 timeoutForClientAnswers = 100
 serverPort = 9000
@@ -13,14 +14,14 @@ setupFakeClient = (clientName) ->
 	result = new FakeUdpClient serverPort, clientName
 	result.enableLogging() if enableLogging
 	result.sendPlayerRegistration()
-	result.receivesRegistrationConfirmation()
+	await result.receivesRegistrationConfirmation()
 	result
 
 setupSpectator = (clientName) ->
 	result = new FakeUdpClient serverPort, clientName
 	result.enableLogging() if enableLogging
 	result.sendSpectatorRegistration()
-	result.receivesRegistrationConfirmation()
+	await result.receivesRegistrationConfirmation()
 	result
 		
 serverAlwaysOrdersPlayersAlphabeticallyInNewRounds = ->
@@ -56,24 +57,24 @@ describe 'the Mia server', ->
 
 		it 'should accept player registrations', ->
 			client.sendPlayerRegistration()
-			client.receivesRegistrationConfirmation()
+			await client.receivesRegistrationConfirmation()
 
 	describe 'round setup', ->
 
 		client = null
 
 		beforeEach ->
-			client = setupFakeClient 'testClient'
-			runs -> game.start()
+			client = await setupFakeClient 'testClient'
+			game.start()
 
 		afterEach ->
 			client.shutDown()
 
 		it 'should keep trying to start a round while nobody joins', ->
-			client.receivesOfferToJoinRound()
-			client.receivesNotificationThatRoundWasCanceled 'NO_PLAYERS'
+			await client.receivesOfferToJoinRound()
+			await client.receivesNotificationThatRoundWasCanceled 'NO_PLAYERS'
 
-			client.receivesOfferToJoinRound()
+			await client.receivesOfferToJoinRound()
 	
 	describe 'should not ask spectators to join rounds', ->
 
@@ -81,53 +82,53 @@ describe 'the Mia server', ->
 		spectator = null
 
 		beforeEach ->
-			spectator = setupSpectator 'theSpectator'
-			player = setupFakeClient 'thePlayer'
-			runs -> game.start()
+			spectator = await setupSpectator 'theSpectator'
+			player = await setupFakeClient 'thePlayer'
+			game.start()
 
 		afterEach ->
 			spectator.shutDown()
 			player.shutDown()
 
 		it 'should not invite spectators to join rounds', ->
-			player.receivesOfferToJoinRound()
+			await player.receivesOfferToJoinRound()
 			player.joinsRound()
 
-			player.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
+			await player.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
 
 			spectator.didNotReceiveOfferToJoinRound()
-			spectator.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
+			await spectator.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
 
 	describe 'when only one player participates in a round', ->
 
 		player = null
 
 		beforeEach ->
-			player = setupFakeClient 'thePlayer'
-			runs -> game.start()
+			player = await setupFakeClient 'thePlayer'
+			game.start()
 
 		afterEach ->
 			player.shutDown()
 
 		it 'should award the player a point without playing the round', ->
-			player.receivesOfferToJoinRound()
+			await player.receivesOfferToJoinRound()
 			player.joinsRound()
-			player.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
-			player.receivesNotificationThatRoundWasCanceled 'ONLY_ONE_PLAYER'
-			player.receivesScores thePlayer: 1
+			await player.receivesNotificationThatRoundIsStarting 1, 'thePlayer'
+			await player.receivesNotificationThatRoundWasCanceled 'ONLY_ONE_PLAYER'
+			await player.receivesScores thePlayer: 1
 			
-			player.receivesOfferToJoinRound()
+			await player.receivesOfferToJoinRound()
 
 	describe 'previously registered player registers again', ->
 
 		oldPlayer = newPlayer = otherPlayer = null
 
 		beforeEach ->
-			oldPlayer = setupFakeClient 'thePlayer'
-			otherPlayer = setupFakeClient 'theOtherPlayer'
+			oldPlayer = await setupFakeClient 'thePlayer'
+			otherPlayer = await setupFakeClient 'theOtherPlayer'
 			serverRolls 3, 1
 			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
-			runs -> game.start()
+			game.start()
 
 		afterEach ->
 			oldPlayer.shutDown()
@@ -135,32 +136,32 @@ describe 'the Mia server', ->
 			otherPlayer.shutDown()
 
 		playRound = (player1, player2) ->
-			player1.isAskedToPlayATurn()
+			await player1.isAskedToPlayATurn()
 			player1.rolls()
-			player1.receivesRolledDice dice.create(3, 1)
+			await player1.receivesRolledDice dice.create(3, 1)
 			player1.announcesDice dice.create(6, 6)
-			player2.isAskedToPlayATurn()
+			await player2.isAskedToPlayATurn()
 			player2.wantsToSee()
 
 		it 'should allow the new player to take the place of the old player in the next round, keeping the score', ->
-			otherPlayer.receivesOfferToJoinRound()
+			await otherPlayer.receivesOfferToJoinRound()
 			otherPlayer.joinsRound()
 
-			oldPlayer.receivesOfferToJoinRound()
+			await oldPlayer.receivesOfferToJoinRound()
 			oldPlayer.joinsRound()
 
-			newPlayer = setupFakeClient 'thePlayer'
+			newPlayer = await setupFakeClient 'thePlayer'
 
-			playRound otherPlayer, oldPlayer
+			await playRound otherPlayer, oldPlayer
 
-			otherPlayer.receivesOfferToJoinRound 2
+			await otherPlayer.receivesOfferToJoinRound 2
 			otherPlayer.joinsRound()
-			newPlayer.receivesOfferToJoinRound 2
+			await newPlayer.receivesOfferToJoinRound 2
 			newPlayer.joinsRound()
 
-			playRound otherPlayer, newPlayer
+			await playRound otherPlayer, newPlayer
 
-			newPlayer.receivesScores theOtherPlayer: 0, thePlayer: 2
+			await newPlayer.receivesScores theOtherPlayer: 0, thePlayer: 2
 
 	describe 'with two registered players', ->
 
@@ -169,69 +170,69 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
-			client1 = setupFakeClient 'client1'
-			client2 = setupFakeClient 'client2'
+			client1 = await setupFakeClient 'client1'
+			client2 = await setupFakeClient 'client2'
 			eachPlayer = new MultipleClients [client1, client2]
-			runs -> game.start()
+			game.start()
 
 		afterEach ->
-			eachPlayer.shutDown()
+			eachPlayer.shutDown() if eachPlayer?
 
 		it 'should host a round with a player calling and losing', =>
-			eachPlayer.receivesOfferToJoinRound()
+			await eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
-			eachPlayer.receivesNotificationThatRoundIsStarting 1, 'client1', 'client2'
+			await eachPlayer.receivesNotificationThatRoundIsStarting 1, 'client1', 'client2'
 			
-			client1.isAskedToPlayATurn()
-			client1.rolls()
-			eachPlayer.receivesNotificationThatPlayerRolls 'client1'
+			await client1.isAskedToPlayATurn()
 			serverRolls 6, 6
-			client1.receivesRolledDice dice.create(6, 6)
+			client1.rolls()
+			await eachPlayer.receivesNotificationThatPlayerRolls 'client1'
+			await client1.receivesRolledDice dice.create(6, 6)
 			client1.announcesDice dice.create(6, 6)
 
-			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(6, 6)
+			await eachPlayer.receivesDiceAnnouncement 'client1', dice.create(6, 6)
 
-			client2.isAskedToPlayATurn()
+			await client2.isAskedToPlayATurn()
 			client2.wantsToSee()
 
-			eachPlayer.receivesNotificationThatPlayerWantsToSee 'client2'
-			eachPlayer.receivesActualDice dice.create(6, 6)
-			eachPlayer.receivesNotificationThatPlayerLost 'client2', 'SEE_FAILED'
-			eachPlayer.receivesScores client1: 1, client2: 0
+			await eachPlayer.receivesNotificationThatPlayerWantsToSee 'client2'
+			await eachPlayer.receivesActualDice dice.create(6, 6)
+			await eachPlayer.receivesNotificationThatPlayerLost 'client2', 'SEE_FAILED'
+			await eachPlayer.receivesScores client1: 1, client2: 0
 
 		it 'should host a round with a player calling and winning', ->
-			eachPlayer.receivesOfferToJoinRound()
+			await eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
-			eachPlayer.receivesNotificationThatRoundIsStarting 1, 'client1', 'client2'
+			await eachPlayer.receivesNotificationThatRoundIsStarting 1, 'client1', 'client2'
 			
-			client1.isAskedToPlayATurn()
+			await client1.isAskedToPlayATurn()
 			client1.rolls()
 			serverRolls 4, 4
-			client1.receivesRolledDice dice.create(4, 4)
+			await client1.receivesRolledDice dice.create(4, 4)
 			client1.announcesDice dice.create(6, 6)
 
-			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(6, 6)
+			await eachPlayer.receivesDiceAnnouncement 'client1', dice.create(6, 6)
 
-			client2.isAskedToPlayATurn()
+			await client2.isAskedToPlayATurn()
 			client2.wantsToSee()
 
-			eachPlayer.receivesActualDice dice.create(4, 4)
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'CAUGHT_BLUFFING'
-			eachPlayer.receivesScores client1: 0, client2: 1
+			await eachPlayer.receivesActualDice dice.create(4, 4)
+			await eachPlayer.receivesNotificationThatPlayerLost 'client1', 'CAUGHT_BLUFFING'
+			await eachPlayer.receivesScores client1: 0, client2: 1
 
 		player1LosesRound = ->
-			eachPlayer.receivesOfferToJoinRound()
+			await eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
-			client1.isAskedToPlayATurn()
+			await client1.isAskedToPlayATurn()
 			client1.wantsToSee()
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'SEE_BEFORE_FIRST_ROLL'
+			await eachPlayer.receivesNotificationThatPlayerLost 'client1', 'SEE_BEFORE_FIRST_ROLL'
 
 		it 'should keep score across multiple rounds', ->
-			player1LosesRound()
-			eachPlayer.receivesScores client1: 0, client2: 1
+			await player1LosesRound()
+			await eachPlayer.receivesScores client1: 0, client2: 1
 
-			player1LosesRound()
-			eachPlayer.receivesScores client1: 0, client2: 2
+			await player1LosesRound()
+			await eachPlayer.receivesScores client1: 0, client2: 2
 
 	describe 'mia rules', ->
 
@@ -240,56 +241,64 @@ describe 'the Mia server', ->
 
 		beforeEach ->
 			serverAlwaysOrdersPlayersAlphabeticallyInNewRounds()
-			client1 = setupFakeClient 'client1'
-			client2 = setupFakeClient 'client2'
-			client3 = setupFakeClient 'client3'
+			client1 = await setupFakeClient 'client1'
+			client2 = await setupFakeClient 'client2'
+			client3 = await setupFakeClient 'client3'
 			eachPlayer = new MultipleClients [client1, client2, client3]
-			runs -> game.start()
+			game.start()
 
 		afterEach ->
 			eachPlayer.shutDown()
 
 		it 'when mia is announced, all other players immediately lose', ->
 			serverRolls 2, 1
-			eachPlayer.receivesOfferToJoinRound()
+			await eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
 			
-			client1.isAskedToPlayATurn()
+			await client1.isAskedToPlayATurn()
 			client1.rolls()
-			client1.receivesRolledDice dice.create(2, 1)
+			await client1.receivesRolledDice dice.create(2, 1)
 			client1.announcesDice dice.create(2, 1)
 
-			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
-			eachPlayer.receivesActualDice dice.create(2, 1)
-			eachPlayer.receivesNotificationThatPlayersLost ['client2', 'client3'], 'MIA'
-			eachPlayer.receivesScores client1: 1, client2: 0, client3: 0
+			await eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
+			await eachPlayer.receivesActualDice dice.create(2, 1)
+			await eachPlayer.receivesNotificationThatPlayersLost ['client2', 'client3'], 'MIA'
+			await eachPlayer.receivesScores client1: 1, client2: 0, client3: 0
 
 		it 'when mia is announced wrongly, player immediately loses', ->
 			serverRolls 3, 1
-			eachPlayer.receivesOfferToJoinRound()
+			await eachPlayer.receivesOfferToJoinRound()
 			eachPlayer.joinsRound()
-			
-			client1.isAskedToPlayATurn()
+
+			await client1.isAskedToPlayATurn()
 			client1.rolls()
-			client1.receivesRolledDice dice.create(3, 1)
+			await client1.receivesRolledDice dice.create(3, 1)
 			client1.announcesDice dice.create(2, 1)
 
-			eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
-			eachPlayer.receivesActualDice dice.create(3, 1)
-			eachPlayer.receivesNotificationThatPlayerLost 'client1', 'LIED_ABOUT_MIA'
-			eachPlayer.receivesScores client1: 0, client2: 1, client3: 1
+			await eachPlayer.receivesDiceAnnouncement 'client1', dice.create(2, 1)
+			await eachPlayer.receivesActualDice dice.create(3, 1)
+			await eachPlayer.receivesNotificationThatPlayerLost 'client1', 'LIED_ABOUT_MIA'
+			await eachPlayer.receivesScores client1: 0, client2: 1, client3: 1
 
 class MultipleClients
 	constructor: (clients) ->
-		wrapMethod = (methodName) =>
+		delegate = (methodName) =>
 			(args...) =>
 				for client in clients
 					client[methodName](args...)
+		delegateAsync = (methodName) =>
+			(args...) =>
+				promises = for client in clients
+					client[methodName](args...)
+				Promise.all(promises)
 
-		exampleClient = clients[0]
-		for method of exampleClient
-			@[method] = wrapMethod method
-			
+		for method in ['joinsRound', 'shutDown']
+			@[method] = delegate method
+		for method in ['receivesOfferToJoinRound', 'receivesDiceAnnouncement', 'receivesActualDice', 
+				'receivesNotificationThatPlayerLost', 'receivesNotificationThatPlayersLost', 'receivesScores',
+				'receivesNotificationThatRoundIsStarting', 'receivesNotificationThatPlayerRolls',
+				'receivesNotificationThatPlayerWantsToSee' ] 
+			@[method] = delegateAsync method
 
 class BaseFakeClient
 	constructor: (@name) ->
@@ -314,13 +323,11 @@ class BaseFakeClient
 		@receivesWithAppendedToken "ROUND STARTING"
 	
 	didNotReceiveOfferToJoinRound: ->
-		runs =>
-			matcher = (message) -> /ROUND STARTING/.test(message)
-			expect(@hasReceivedMessageMatching matcher).toBeFalsy()
+		matcher = (message) -> /ROUND STARTING/.test(message)
+		expect(@hasReceivedMessageMatching matcher).toBeFalsy()
 	
 	joinsRound: ->
-		runs =>
-			@joinsRoundWithToken @currentToken
+		@joinsRoundWithToken @currentToken
 
 	joinsRoundWithToken: (token) ->
 		@send "JOIN;#{token}"
@@ -335,19 +342,16 @@ class BaseFakeClient
 		@receivesWithAppendedToken 'YOUR TURN'
 
 	rolls: ->
-		runs =>
-			@send "ROLL;#{@currentToken}"
+		@send "ROLL;#{@currentToken}"
 
 	wantsToSee: ->
-		runs =>
-			@send "SEE;#{@currentToken}"
+		@send "SEE;#{@currentToken}"
 
 	receivesRolledDice: (dice) ->
 		@receivesWithAppendedToken "ROLLED;#{dice.die1},#{dice.die2}"
 	
 	announcesDice: (dice) ->
-		runs =>
-			@send "ANNOUNCE;#{dice};#{@currentToken}"
+		@send "ANNOUNCE;#{dice};#{@currentToken}"
 
 	receivesDiceAnnouncement: (playerName, dice) ->
 		@receives "ANNOUNCED;#{playerName};#{dice}"
@@ -384,10 +388,8 @@ class BaseFakeClient
 		@receivesMessageMatching expectedMessage, matcher
 
 	receivesMessageMatching: (messageForDisplay, matcher) ->
-		runs =>
-			@log "[#{@name}] waiting for #{messageForDisplay}"
-			messageReceived = => @hasReceivedMessageMatching matcher
-			waitsFor messageReceived, messageForDisplay, 250
+		@log "[#{@name}] waiting for #{messageForDisplay}"
+		waitFor 250, => @hasReceivedMessageMatching matcher
 
 	hasReceivedMessageMatching: (matcher) ->
 		for i in [0..@messages.length]
@@ -398,18 +400,17 @@ class BaseFakeClient
 		return false
 
 class FakeUdpClient extends BaseFakeClient
-	constructor: (@serverPort, @name) ->
-		super @name
+	constructor: (@serverPort, name) ->
+		super name
 		@socket = dgram.createSocket 'udp4', (msg) =>
 			@log "[#{@name}] received #{msg.toString()}"
 			@messages.push msg.toString()
 		@socket.bind()
 
 	send: (string) ->
-		runs =>
-			@log "[#{@name}] sending #{string}"
-			buffer = new Buffer(string)
-			@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
+		@log "[#{@name}] sending #{string}"
+		buffer = new Buffer(string)
+		@socket.send buffer, 0, buffer.length, @serverPort, 'localhost'
 
 	shutDown: () ->
 		@socket.close()

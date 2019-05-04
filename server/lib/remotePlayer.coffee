@@ -5,7 +5,6 @@ dice = require './dice'
 
 class InactiveState
 	handleMessage: (messageCommand, messageArgs) ->
-		this
 
 class WaitingForJoinState
 	constructor: (@token, @callback, @nextState) ->
