@@ -1,50 +1,14 @@
-expireCallback = require '../lib/expireCallback'
-
-# See http://coffeescriptcookbook.com/chapters/arrays/shuffling-array-elements
-Array::shuffle = -> @sort -> 0.5 - Math.random()
+expireCallback = require './expireCallback'
+playerList = require './playerList'
 
 Messages =
 	ROLL: {}
 	SEE: {}
 
-class PlayerList
-	constructor: -> @players = []
-
-	size: -> @realPlayers().length
-	isEmpty: -> @size() == 0
-	hasPlayer: (player) -> player in @players
-	permute: -> @players.shuffle()
-
-	add: (newPlayer) ->
-		@players = @collect (existingPlayer) -> existingPlayer.name != newPlayer.name
-		@players.push newPlayer
-
-	first: (fn) ->
-		return if @isEmpty()
-		fn @players[0]
-
-	each: (fn) -> @players.forEach fn
-
-	eachRealPlayer: (fn) -> @realPlayers().forEach fn
-
-	realPlayers: -> @collect (player) -> !player.isSpectator?
-
-	collect: (predicate) ->
-		player for player in @players when predicate(player)
-
-	nextPlayer: () ->
-		if @currentPlayer? and @currentPlayer < @size() - 1
-			++@currentPlayer
-			@lastPlayer = @currentPlayer - 1
-		else
-			@currentPlayer = 0
-			@lastPlayer = @size() - 1
-		[@players[@currentPlayer], @players[@lastPlayer]]
-
 class MiaGame
 	constructor: ->
-		@players = new PlayerList
-		@currentRound = new PlayerList
+		@players = playerList.empty()
+		@currentRound = playerList.empty()
 		@broadcastTimeout = 200
 		@diceRoller = require './diceRoller'
 		@stopped = false
@@ -70,7 +34,7 @@ class MiaGame
 	newRound: ->
 		return if @stopped
 		@roundNumber++
-		@currentRound = round = new PlayerList
+		@currentRound = round = playerList.empty()
 		expirer = @startExpirer =>
 			return if @stopped
 			if @players.isEmpty()
@@ -208,4 +172,3 @@ exports.createGame = -> new MiaGame
 exports.Messages = Messages
 exports.classes =
 	MiaGame: MiaGame
-	PlayerList: PlayerList
